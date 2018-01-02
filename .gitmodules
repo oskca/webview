@@ -1,0 +1,3 @@
+[submodule "clibs"]
+	path = clibs
+	url = https://github.com/zserge/webview.git
