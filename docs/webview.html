@@ -1404,12 +1404,12 @@ function main() {
 <dt id="newWebView"><a name="newWebView,string,string,int,int"></a><pre><span class="Keyword">proc</span> <span class="Identifier">newWebView</span><span class="Other">(</span><span class="Identifier">title</span> <span class="Other">=</span> <span class="StringLit">&quot;WebView&quot;</span><span class="Other">;</span> <span class="Identifier">url</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">width</span> <span class="Other">=</span> <span class="DecNumber">640</span><span class="Other">;</span> <span class="Identifier">height</span> <span class="Other">=</span> <span class="DecNumber">480</span><span class="Other">;</span> <span class="Identifier">resizable</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span>
                <span class="Identifier">debug</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
-
+New creates and opens a new webview window using the given settings. This function will not do webview init
 
 </dd>
 <dt id="run"><a name="run,ptr.Webview"></a><pre><span class="Keyword">proc</span> <span class="Identifier">run</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
-
+Run() starts the main UI loop until the user closes the webview window or Terminate() is called.
 
 </dd>
 <dt id="open"><a name="open,string,string,int,int"></a><pre><span class="Keyword">proc</span> <span class="Identifier">open</span><span class="Other">(</span><span class="Identifier">title</span> <span class="Other">=</span> <span class="StringLit">&quot;WebView&quot;</span><span class="Other">;</span> <span class="Identifier">url</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">width</span> <span class="Other">=</span> <span class="DecNumber">640</span><span class="Other">;</span> <span class="Identifier">height</span> <span class="Other">=</span> <span class="DecNumber">480</span><span class="Other">;</span> <span class="Identifier">resizable</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> <span class="Other pragmabegin">{.</span><div class="pragma">
@@ -1430,7 +1430,7 @@ function main() {
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2018-01-02 13:27:38 UTC</small>
+        <small>Made with Nim. Generated: 2018-01-02 18:38:46 UTC</small>
       </div>
     </div>
   </div>

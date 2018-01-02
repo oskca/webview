@@ -5,3 +5,9 @@ excellent cross-platform single header webview
 library for C/C++ using Gtk, Cocoa or MSHTML 
 repectively.
 
+# Docs
+
+Documentation is [here](http://htmlpreview.github.io/?https://github.com/oskca/webview/blob/master/docs/webview.html)
+
+and [Golang's doc for webview](https://godoc.org/github.com/zserge/webview) is
+also very useful.
