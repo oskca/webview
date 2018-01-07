@@ -1211,30 +1211,38 @@ function main() {
   </div>
   <ul class="simple simple-toc" id="toc-list">
 <li>
+  <a class="reference reference-toplevel" href="#6" id="56">Imports</a>
+  <ul class="simple simple-toc-section">
+    
+  </ul>
+</li>
+<li>
   <a class="reference reference-toplevel" href="#7" id="57">Types</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#ExternalInvokeCbT"
-    title="ExternalInvokeCbT = proc (w: ptr Webview; arg: cstring)"><wbr />External<wbr />Invoke<wbr />Cb<wbr />T<span class="attachedType" style="visibility:hidden"></span></a></li>
-  <li><a class="reference" href="#Webview"
-    title="Webview = object
+      <li><a class="reference" href="#ExternalInvokeCb"
+    title="ExternalInvokeCb = proc (w: Webview; arg: string)"><wbr />External<wbr />Invoke<wbr />Cb<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#WebviewObj"
+    title="WebviewObj = object
   url*: cstring
   title*: cstring
   width*: cint
   height*: cint
   resizable*: cint
   debug*: cint
-  externalInvokeCb*: ExternalInvokeCbT
-  priv*: pointer
-  userdata*: pointer"><wbr />Webview<span class="attachedType" style="visibility:hidden"></span></a></li>
+  invokeCb: pointer
+  priv: pointer
+  userdata: pointer"><wbr />Webview<wbr />Obj<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#Webview"
+    title="Webview = ptr WebviewObj"><wbr />Webview<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#DialogType"
     title="DialogType = enum
-  DIALOG_TYPE_OPEN = 0, DIALOG_TYPE_SAVE = 1, DIALOG_TYPE_ALERT = 2"><wbr />Dialog<wbr />Type<span class="attachedType" style="visibility:hidden"></span></a></li>
+  dtOpen = 0, dtSave = 1, dtAlert = 2"><wbr />Dialog<wbr />Type<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#DispatchFn"
-    title="DispatchFn = proc (w: ptr Webview; arg: pointer)"><wbr />Dispatch<wbr />Fn<span class="attachedType" style="visibility:hidden"></span></a></li>
+    title="DispatchFn = proc (w: Webview; arg: pointer)"><wbr />Dispatch<wbr />Fn<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#DispatchArg"
     title="DispatchArg = object
   fn*: DispatchFn
-  w*: ptr Webview
+  w*: Webview
   arg*: pointer"><wbr />Dispatch<wbr />Arg<span class="attachedType" style="visibility:hidden"></span></a></li>
 
   </ul>
@@ -1242,36 +1250,46 @@ function main() {
 <li>
   <a class="reference reference-toplevel" href="#12" id="62">Procs</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#init,ptr.Webview"
-    title="init(w: ptr Webview): cint"><wbr />init<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
-  <li><a class="reference" href="#loop,ptr.Webview,cint"
-    title="loop(w: ptr Webview; blocking: cint): cint"><wbr />loop<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
-  <li><a class="reference" href="#eval,ptr.Webview,cstring"
-    title="eval(w: ptr Webview; js: cstring): cint"><wbr />eval<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
-  <li><a class="reference" href="#injectCss,ptr.Webview,cstring"
-    title="injectCss(w: ptr Webview; css: cstring): cint"><wbr />inject<wbr />Css<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
-  <li><a class="reference" href="#setTitle,ptr.Webview,cstring"
-    title="setTitle(w: ptr Webview; title: cstring)"><wbr />set<wbr />Title<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
-  <li><a class="reference" href="#dialog,ptr.Webview,DialogType,cint,cstring,cstring,cstring,csize"
-    title="dialog(w: ptr Webview; dlgtype: DialogType; flags: cint; title: cstring; arg: cstring;
+      <li><a class="reference" href="#init,Webview"
+    title="init(w: Webview): cint"><wbr />init<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#loop,Webview,cint"
+    title="loop(w: Webview; blocking: cint): cint"><wbr />loop<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#eval,Webview,cstring"
+    title="eval(w: Webview; js: cstring): cint"><wbr />eval<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#injectCss,Webview,cstring"
+    title="injectCss(w: Webview; css: cstring): cint"><wbr />inject<wbr />Css<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#setTitle,Webview,cstring"
+    title="setTitle(w: Webview; title: cstring)"><wbr />set<wbr />Title<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#dialog,Webview,DialogType,cint,cstring,cstring,cstring,csize"
+    title="dialog(w: Webview; dlgtype: DialogType; flags: cint; title: cstring; arg: cstring;
        result: cstring; resultsz: csize)"><wbr />dialog<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
-  <li><a class="reference" href="#dispatch,ptr.Webview,DispatchFn,pointer"
-    title="dispatch(w: ptr Webview; fn: DispatchFn; arg: pointer)"><wbr />dispatch<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
-  <li><a class="reference" href="#terminate,ptr.Webview"
-    title="terminate(w: ptr Webview)"><wbr />terminate<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
-  <li><a class="reference" href="#exit,ptr.Webview"
-    title="exit(w: ptr Webview)"><wbr />exit<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#dispatch,Webview,DispatchFn,pointer"
+    title="dispatch(w: Webview; fn: DispatchFn; arg: pointer)"><wbr />dispatch<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#terminate,Webview"
+    title="terminate(w: Webview)"><wbr />terminate<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#exit,Webview"
+    title="exit(w: Webview)"><wbr />exit<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
   <li><a class="reference" href="#debug,cstring"
     title="debug(format: cstring)"><wbr />debug<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#printLog,cstring"
     title="printLog(s: cstring)"><wbr />print<wbr />Log<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#webview,cstring,cstring,cint,cint,cint"
     title="webview(title: cstring; url: cstring; w: cint; h: cint; resizable: cint): cint"><wbr />webview<span class="attachedType" style="visibility:hidden"></span></a></li>
-  <li><a class="reference" href="#newWebView,string,string,int,int"
+  <li><a class="reference" href="#externalInvokeCB=,Webview,ExternalInvokeCb"
+    title="externalInvokeCB=(w: Webview; cb: ExternalInvokeCb)"><wbr />external<wbr />Invoke<wbr />CB=<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#newWebView,string,string,int,int,ExternalInvokeCb"
     title="newWebView(title = &quot;WebView&quot;; url = &quot;&quot;; width = 640; height = 480; resizable = true;
-           debug = false): ptr Webview"><wbr />new<wbr />Web<wbr />View<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
-  <li><a class="reference" href="#run,ptr.Webview"
-    title="run(w: ptr Webview)"><wbr />run<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+           debug = false; cb: ExternalInvokeCb = nil): Webview"><wbr />new<wbr />Web<wbr />View<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#dialog,Webview,DialogType,int,string,string"
+    title="dialog(w: Webview; dlgType: DialogType; flags: int; title, arg: string): string"><wbr />dialog<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#alert,Webview,string,string"
+    title="alert(w: Webview; title, msg: string)"><wbr />alert<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#chooseFileToOpen,Webview,string"
+    title="chooseFileToOpen(w: Webview; title = &quot;Open File&quot;): string"><wbr />choose<wbr />File<wbr />To<wbr />Open<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#chooseFileToSave,Webview,string"
+    title="chooseFileToSave(w: Webview; title = &quot;Save File&quot;): string"><wbr />choose<wbr />File<wbr />To<wbr />Save<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#run,Webview"
+    title="run(w: Webview)"><wbr />run<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
   <li><a class="reference" href="#open,string,string,int,int"
     title="open(title = &quot;WebView&quot;; url = &quot;&quot;; width = 640; height = 480; resizable = true): int"><wbr />open<span class="attachedType" style="visibility:hidden"></span></a></li>
 
@@ -1283,45 +1301,55 @@ function main() {
   </div>
   <div class="nine columns" id="content">
   <div id="tocRoot"></div>
-  <p class="module-desc"><blockquote><p>hight level api</p></blockquote>
+  <p class="module-desc"><blockquote><p>Hight level api and javascript bindings to easy bidirectonal message passsing for <tt class="docutils literal"><span class="pre">nim</span></tt> and the <tt class="docutils literal"><span class="pre">webview</span></tt> .</p></blockquote>
 </p>
-  <div class="section" id="7">
+  <div class="section" id="6">
+<h1><a class="toc-backref" href="#6">Imports</a></h1>
+<dl class="item">
+<a class="reference external" href="tables.html">tables</a>
+</dl></div>
+<div class="section" id="7">
 <h1><a class="toc-backref" href="#7">Types</a></h1>
 <dl class="item">
-<dt id="ExternalInvokeCbT"><a name="ExternalInvokeCbT"></a><pre><span class="Identifier">ExternalInvokeCbT</span> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span></pre></dt>
+<dt id="ExternalInvokeCb"><a name="ExternalInvokeCb"></a><pre><span class="Identifier">ExternalInvokeCb</span> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span></pre></dt>
 <dd>
 
 
 </dd>
-<dt id="Webview"><a name="Webview"></a><pre><span class="Identifier">Webview</span> <span class="Other">=</span> <span class="Keyword">object</span>
+<dt id="WebviewObj"><a name="WebviewObj"></a><pre><span class="Identifier">WebviewObj</span> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">url</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;url&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">cstring</span>
   <span class="Identifier">title</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;title&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">cstring</span>
   <span class="Identifier">width</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;width&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">cint</span>
   <span class="Identifier">height</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;height&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">cint</span>
   <span class="Identifier">resizable</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;resizable&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">cint</span>
   <span class="Identifier">debug</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;debug&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">cint</span>
-  <span class="Identifier">externalInvokeCb</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;external_invoke_cb&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">ExternalInvokeCbT</span>
-  <span class="Identifier">priv</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;priv&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">pointer</span>
-  <span class="Identifier">userdata</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;userdata&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">pointer</span>
+  <span class="Identifier">invokeCb</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;external_invoke_cb&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">pointer</span>
+  <span class="Identifier">priv</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;priv&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">pointer</span>
+  <span class="Identifier">userdata</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;userdata&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">pointer</span>
 </pre></dt>
 <dd>
 
 
 </dd>
-<dt id="DialogType"><a name="DialogType"></a><pre><span class="Identifier">DialogType</span> <span class="Other">=</span> <span class="Keyword">enum</span>
-  <span class="Identifier">DIALOG_TYPE_OPEN</span> <span class="Other">=</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="Identifier">DIALOG_TYPE_SAVE</span> <span class="Other">=</span> <span class="DecNumber">1</span><span class="Other">,</span> <span class="Identifier">DIALOG_TYPE_ALERT</span> <span class="Other">=</span> <span class="DecNumber">2</span></pre></dt>
+<dt id="Webview"><a name="Webview"></a><pre><span class="Identifier">Webview</span> <span class="Other">=</span> <span class="Keyword">ptr</span> <span class="Identifier">WebviewObj</span></pre></dt>
 <dd>
 
 
 </dd>
-<dt id="DispatchFn"><a name="DispatchFn"></a><pre><span class="Identifier">DispatchFn</span> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">)</span></pre></dt>
+<dt id="DialogType"><a name="DialogType"></a><pre><span class="Identifier">DialogType</span> <span class="Other">=</span> <span class="Keyword">enum</span>
+  <span class="Identifier">dtOpen</span> <span class="Other">=</span> <span class="DecNumber">0</span><span class="Other">,</span> <span class="Identifier">dtSave</span> <span class="Other">=</span> <span class="DecNumber">1</span><span class="Other">,</span> <span class="Identifier">dtAlert</span> <span class="Other">=</span> <span class="DecNumber">2</span></pre></dt>
+<dd>
+
+
+</dd>
+<dt id="DispatchFn"><a name="DispatchFn"></a><pre><span class="Identifier">DispatchFn</span> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">)</span></pre></dt>
 <dd>
 
 
 </dd>
 <dt id="DispatchArg"><a name="DispatchArg"></a><pre><span class="Identifier">DispatchArg</span> <span class="Other">=</span> <span class="Keyword">object</span>
   <span class="Identifier">fn</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;fn&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">DispatchFn</span>
-  <span class="Identifier">w</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;w&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span>
+  <span class="Identifier">w</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;w&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">Webview</span>
   <span class="Identifier">arg</span><span class="Operator">*</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;arg&quot;</span></div><span class="Other pragmaend">.}</span><span class="Other">:</span> <span class="Identifier">pointer</span>
 </pre></dt>
 <dd>
@@ -1333,54 +1361,53 @@ function main() {
 <div class="section" id="12">
 <h1><a class="toc-backref" href="#12">Procs</a></h1>
 <dl class="item">
-<dt id="init"><a name="init,ptr.Webview"></a><pre><span class="Keyword">proc</span> <span class="Identifier">init</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">cint</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_init&quot;</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dt id="init"><a name="init,Webview"></a><pre><span class="Keyword">proc</span> <span class="Identifier">init</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">cint</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_init&quot;</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 
 
 </dd>
-<dt id="loop"><a name="loop,ptr.Webview,cint"></a><pre><span class="Keyword">proc</span> <span class="Identifier">loop</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">blocking</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">cint</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_loop&quot;</span><span class="Other">,</span>
-    <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
-<dd>
-
-
-</dd>
-<dt id="eval"><a name="eval,ptr.Webview,cstring"></a><pre><span class="Keyword">proc</span> <span class="Identifier">eval</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">js</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">cint</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_eval&quot;</span><span class="Other">,</span>
+<dt id="loop"><a name="loop,Webview,cint"></a><pre><span class="Keyword">proc</span> <span class="Identifier">loop</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">blocking</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">cint</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_loop&quot;</span><span class="Other">,</span>
                                         <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 
 
 </dd>
-<dt id="injectCss"><a name="injectCss,ptr.Webview,cstring"></a><pre><span class="Keyword">proc</span> <span class="Identifier">injectCss</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">css</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">cint</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_inject_css&quot;</span><span class="Other">,</span>
+<dt id="eval"><a name="eval,Webview,cstring"></a><pre><span class="Keyword">proc</span> <span class="Identifier">eval</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">js</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">cint</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_eval&quot;</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dd>
+
+
+</dd>
+<dt id="injectCss"><a name="injectCss,Webview,cstring"></a><pre><span class="Keyword">proc</span> <span class="Identifier">injectCss</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">css</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">cint</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_inject_css&quot;</span><span class="Other">,</span>
     <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 
 
 </dd>
-<dt id="setTitle"><a name="setTitle,ptr.Webview,cstring"></a><pre><span class="Keyword">proc</span> <span class="Identifier">setTitle</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_set_title&quot;</span><span class="Other">,</span>
+<dt id="setTitle"><a name="setTitle,Webview,cstring"></a><pre><span class="Keyword">proc</span> <span class="Identifier">setTitle</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_set_title&quot;</span><span class="Other">,</span>
+                                       <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dd>
+
+
+</dd>
+<dt id="dialog"><a name="dialog,Webview,DialogType,cint,cstring,cstring,cstring,csize"></a><pre><span class="Keyword">proc</span> <span class="Identifier">dialog</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">dlgtype</span><span class="Other">:</span> <span class="Identifier">DialogType</span><span class="Other">;</span> <span class="Identifier">flags</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">;</span>
+           <span class="Identifier">result</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">;</span> <span class="Identifier">resultsz</span><span class="Other">:</span> <span class="Identifier">csize</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_dialog&quot;</span><span class="Other">,</span>
     <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 
 
 </dd>
-<dt id="dialog"><a name="dialog,ptr.Webview,DialogType,cint,cstring,cstring,cstring,csize"></a><pre><span class="Keyword">proc</span> <span class="Identifier">dialog</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">dlgtype</span><span class="Other">:</span> <span class="Identifier">DialogType</span><span class="Other">;</span> <span class="Identifier">flags</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">;</span>
-           <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">;</span> <span class="Identifier">result</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">;</span> <span class="Identifier">resultsz</span><span class="Other">:</span> <span class="Identifier">csize</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma">
-    <span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_dialog&quot;</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dt id="dispatch"><a name="dispatch,Webview,DispatchFn,pointer"></a><pre><span class="Keyword">proc</span> <span class="Identifier">dispatch</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">fn</span><span class="Other">:</span> <span class="Identifier">DispatchFn</span><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_dispatch&quot;</span><span class="Other">,</span>
+    <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 
 
 </dd>
-<dt id="dispatch"><a name="dispatch,ptr.Webview,DispatchFn,pointer"></a><pre><span class="Keyword">proc</span> <span class="Identifier">dispatch</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">fn</span><span class="Other">:</span> <span class="Identifier">DispatchFn</span><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma">
-    <span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_dispatch&quot;</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dt id="terminate"><a name="terminate,Webview"></a><pre><span class="Keyword">proc</span> <span class="Identifier">terminate</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_terminate&quot;</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 
 
 </dd>
-<dt id="terminate"><a name="terminate,ptr.Webview"></a><pre><span class="Keyword">proc</span> <span class="Identifier">terminate</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_terminate&quot;</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
-<dd>
-
-
-</dd>
-<dt id="exit"><a name="exit,ptr.Webview"></a><pre><span class="Keyword">proc</span> <span class="Identifier">exit</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_exit&quot;</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dt id="exit"><a name="exit,Webview"></a><pre><span class="Keyword">proc</span> <span class="Identifier">exit</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_exit&quot;</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 
 
@@ -1401,15 +1428,45 @@ function main() {
 
 
 </dd>
-<dt id="newWebView"><a name="newWebView,string,string,int,int"></a><pre><span class="Keyword">proc</span> <span class="Identifier">newWebView</span><span class="Other">(</span><span class="Identifier">title</span> <span class="Other">=</span> <span class="StringLit">&quot;WebView&quot;</span><span class="Other">;</span> <span class="Identifier">url</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">width</span> <span class="Other">=</span> <span class="DecNumber">640</span><span class="Other">;</span> <span class="Identifier">height</span> <span class="Other">=</span> <span class="DecNumber">480</span><span class="Other">;</span> <span class="Identifier">resizable</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span>
-               <span class="Identifier">debug</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">)</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dt id="externalInvokeCB="><a name="externalInvokeCB=,Webview,ExternalInvokeCb"></a><pre><span class="Keyword">proc</span> <span class="Identifier">externalInvokeCB=</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">cb</span><span class="Other">:</span> <span class="Identifier">ExternalInvokeCb</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
-New creates and opens a new webview window using the given settings. This function will not do webview init
+Set external invoke callback for webview
 
 </dd>
-<dt id="run"><a name="run,ptr.Webview"></a><pre><span class="Keyword">proc</span> <span class="Identifier">run</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">ptr</span> <span class="Identifier">Webview</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dt id="newWebView"><a name="newWebView,string,string,int,int,ExternalInvokeCb"></a><pre><span class="Keyword">proc</span> <span class="Identifier">newWebView</span><span class="Other">(</span><span class="Identifier">title</span> <span class="Other">=</span> <span class="StringLit">&quot;WebView&quot;</span><span class="Other">;</span> <span class="Identifier">url</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">width</span> <span class="Other">=</span> <span class="DecNumber">640</span><span class="Other">;</span> <span class="Identifier">height</span> <span class="Other">=</span> <span class="DecNumber">480</span><span class="Other">;</span> <span class="Identifier">resizable</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">;</span>
+               <span class="Identifier">debug</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">cb</span><span class="Other">:</span> <span class="Identifier">ExternalInvokeCb</span> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">Webview</span> <span class="Other pragmabegin">{.</span><div class="pragma">
+    <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
-Run() starts the main UI loop until the user closes the webview window or Terminate() is called.
+<tt class="docutils literal"><span class="pre">newWebView</span></tt> creates and opens a new webview window using the given settings. This function will not do webview <tt class="docutils literal"><span class="pre">init</span></tt>, it's done in <tt class="docutils literal"><span class="pre">run</span></tt>
+
+</dd>
+<dt id="dialog"><a name="dialog,Webview,DialogType,int,string,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">dialog</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">dlgType</span><span class="Other">:</span> <span class="Identifier">DialogType</span><span class="Other">;</span> <span class="Identifier">flags</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">,</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other pragmabegin">{.</span><div class="pragma">
+    <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dd>
+dialog() opens a system dialog of the given type and title. String argument can be provided for certain dialogs, such as alert boxes. For alert boxes argument is a message inside the dialog box.
+
+</dd>
+<dt id="alert"><a name="alert,Webview,string,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">alert</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">,</span> <span class="Identifier">msg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dd>
+Show one alert box
+
+</dd>
+<dt id="chooseFileToOpen"><a name="chooseFileToOpen,Webview,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">chooseFileToOpen</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">title</span> <span class="Other">=</span> <span class="StringLit">&quot;Open File&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dd>
+Opens a dialog that requests filenames from the user. Returns &quot;&quot; if the user closed the dialog without selecting a file. 
+
+</dd>
+<dt id="chooseFileToSave"><a name="chooseFileToSave,Webview,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">chooseFileToSave</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">title</span> <span class="Other">=</span> <span class="StringLit">&quot;Save File&quot;</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span>
+    <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dd>
+Opens a dialog that requests a filename to save to from the user. Returns &quot;&quot; if the user closed the dialog without selecting a file.
+
+</dd>
+<dt id="run"><a name="run,Webview"></a><pre><span class="Keyword">proc</span> <span class="Identifier">run</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dd>
+<tt class="docutils literal"><span class="pre">run</span></tt> starts the main UI loop until the user closes the webview window or Terminate() is called.
 
 </dd>
 <dt id="open"><a name="open,string,string,int,int"></a><pre><span class="Keyword">proc</span> <span class="Identifier">open</span><span class="Other">(</span><span class="Identifier">title</span> <span class="Other">=</span> <span class="StringLit">&quot;WebView&quot;</span><span class="Other">;</span> <span class="Identifier">url</span> <span class="Other">=</span> <span class="StringLit">&quot;&quot;</span><span class="Other">;</span> <span class="Identifier">width</span> <span class="Other">=</span> <span class="DecNumber">640</span><span class="Other">;</span> <span class="Identifier">height</span> <span class="Other">=</span> <span class="DecNumber">480</span><span class="Other">;</span> <span class="Identifier">resizable</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">int</span> <span class="Other pragmabegin">{.</span><div class="pragma">
@@ -1430,7 +1487,7 @@ Run() starts the main UI loop until the user closes the webview window or Termin
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2018-01-02 18:38:46 UTC</small>
+        <small>Made with Nim. Generated: 2018-01-03 22:48:28 UTC</small>
       </div>
     </div>
   </div>
