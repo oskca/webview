@@ -14,17 +14,45 @@ elif defined(darwin):
 
 include webview/private/api
 
-import tables
+import tables, strutils
+import macros
 
 ##
 ## Hight level api and javascript bindings to easy bidirectonal 
 ## message passsing for ``nim`` and the ``webview`` .
 ##
 
+# proc binding support
+import json
+
+type
+  # ExternalProc[P, R] = proc(param: P, ret: var R): int
+  CallHook = proc(params: string): string # json -> proc -> json
+  MethodInfo* = object
+    name: string
+    args: string # json string
+
+# for bindProc
+var eps = newTable[Webview, TableRef[string, CallHook]]()
+
 # easy callbacks
 var cbs = newTable[Webview, ExternalInvokeCb]()
+
 proc generalExternalInvokeCallback(w: Webview, arg: cstring) {.exportc.} =
-  if cbs.hasKey(w): cbs[w](w, $arg)
+  var handled = false
+  if eps.hasKey(w):
+    try:
+      var mi = parseJson($arg).to(MethodInfo)
+      if hasKey(eps[w], mi.name):
+        discard eps[w][mi.name](mi.args) # TODO handle return values using js callbacks
+        handled = true
+    except:
+      echo getCurrentExceptionMsg()
+  elif cbs.hasKey(w): 
+    cbs[w](w, $arg)
+    handled = true
+  if handled == false:
+    echo "external invode:'", arg, "' not handled"
 
 proc `externalInvokeCB=`*(w: Webview, cb: ExternalInvokeCb)=
   ## Set external invoke callback for webview
@@ -89,4 +117,111 @@ proc open*(title="WebView", url="", width=640, height=480, resizable=true):int {
   ## local file:// URL. On some platforms "data:" URLs are also supported
   ## (Linux/MacOS).
   webview(title.cstring, url.cstring, width.cint, height.cint, (if resizable: 1 else: 0).cint)
+
+const
+  jsTemplate = """
+if (typeof api === 'undefined') {
+	api = {};
+}
+api.$1 = function(arg) {
+	window.external.invoke(
+    JSON.stringify(
+      {name: "$1", args: JSON.stringify(arg)}
+    )
+  );
+};
+"""
+  jsTemplateOnlyArg = """
+if (typeof api === 'undefined') {
+	api = {};
+}
+api.$1 = function(arg) {
+	window.external.invoke(
+    JSON.stringify(
+      {name: "$1", args: JSON.stringify(arg)}
+    )
+  );
+};
+"""
+  jsTemplateNoArg = """
+if (typeof api === 'undefined') {
+	api = {};
+}
+api.$1 = function() {
+	window.external.invoke(
+    JSON.stringify(
+      {name: "$1", args: ""}
+    )
+  );
+};
+"""
+
+proc bindProc*[P, R](w: Webview, name: string, p: (proc(param: P): R)) =
+  proc hook(hookParam: string): string =
+    var 
+      paramVal: P
+      retVal: R
+    try:
+      let jnode = parseJson(hookParam)
+      echo jnode
+      paramVal = jnode.to(P)
+    except:
+      return "parse args failed: " & getCurrentExceptionMsg()
+    retVal = p(paramVal)
+    return $(%*retVal) # ==> json
+  discard eps.hasKeyOrPut(w, newTable[string, CallHook]())
+  eps[w][name] = hook
+  # TODO eval jscode
+  discard w.eval(jsTemplate%[name])
+
+proc bindProc*(w: Webview, name: string, p: proc()) =
+  proc hook(hookParam: string): string =
+    p()
+    return ""
+  discard eps.hasKeyOrPut(w, newTable[string, CallHook]())
+  eps[w][name] = hook
+  # TODO eval jscode
+  discard w.eval(jsTemplateNoArg%[name])
+
+proc bindProc*[P](w: Webview, name: string, p: proc(arg:P)) =
+  proc hook(hookParam: string): string =
+    var 
+      paramVal: P
+    try:
+      let jnode = parseJson(hookParam)
+      paramVal = jnode.to(P)
+    except:
+      return "parse args failed: " & getCurrentExceptionMsg()
+    p(paramVal)
+    return ""
+  discard eps.hasKeyOrPut(w, newTable[string, CallHook]())
+  eps[w][name] = hook
+  # TODO eval jscode
+  discard w.eval(jsTemplateOnlyArg%[name])
+
+macro bindProc*(w: Webview, n: untyped): untyped =
+  ## proc can have many args but only one return types
+  ## and no pragmas
+  expectKind(n, nnkStmtList)
+  result = n
+  var nProc = 0
+  for def in n:
+    expectKind(def, nnkProcDef)
+    let params = def.params()
+    # expectKind(params[0], nnkSym)
+    if params.len() > 2 :
+      error("only proc like `proc fn[T, U](arg: T): U` or `proc fn[T](arg: T)` or `proc()` is allowed", 
+            def)
+    let fname = $def[0]
+    result.add(newCall("bindProc", w, newLit(fname), newIdentNode(fname)))
+  echo treeRepr result
+
+proc call(w: WebView, mi: MethodInfo):string =
+  let hook = eps[w][mi.name]
+  return hook(mi.args)
+
+proc callEPS*(w: Webview, fn, args: string): string =
+  let mi = MethodInfo(name:fn, args:args)
+  return w.call(mi)
+
 
