@@ -29,11 +29,12 @@ type
   # ExternalProc[P, R] = proc(param: P, ret: var R): int
   CallHook = proc(params: string): string # json -> proc -> json
   MethodInfo* = object
-    name: string
-    args: string # json string
+    scope*: string
+    name*: string
+    args*: string # json string
 
 # for bindProc
-var eps = newTable[Webview, TableRef[string, CallHook]]()
+var eps = newTable[Webview, TableRef[string, TableRef[string, CallHook]]]()
 
 # easy callbacks
 var cbs = newTable[Webview, ExternalInvokeCb]()
@@ -43,8 +44,8 @@ proc generalExternalInvokeCallback(w: Webview, arg: cstring) {.exportc.} =
   if eps.hasKey(w):
     try:
       var mi = parseJson($arg).to(MethodInfo)
-      if hasKey(eps[w], mi.name):
-        discard eps[w][mi.name](mi.args) # TODO handle return values using js callbacks
+      if hasKey(eps[w], mi.scope) and hasKey(eps[w][mi.scope], mi.name):
+        discard eps[w][mi.scope][mi.name](mi.args) # TODO handle return values using js callbacks
         handled = true
     except:
       echo getCurrentExceptionMsg()
@@ -120,43 +121,43 @@ proc open*(title="WebView", url="", width=640, height=480, resizable=true):int {
 
 const
   jsTemplate = """
-if (typeof api === 'undefined') {
-	api = {};
+if (typeof $2 === 'undefined') {
+	$2 = {};
 }
-api.$1 = function(arg) {
+$2.$1 = function(arg) {
 	window.external.invoke(
     JSON.stringify(
-      {name: "$1", args: JSON.stringify(arg)}
+      {scope: "$2", name: "$1", args: JSON.stringify(arg)}
     )
   );
 };
 """
   jsTemplateOnlyArg = """
-if (typeof api === 'undefined') {
-	api = {};
+if (typeof $2 === 'undefined') {
+	$2 = {};
 }
-api.$1 = function(arg) {
+$2.$1 = function(arg) {
 	window.external.invoke(
     JSON.stringify(
-      {name: "$1", args: JSON.stringify(arg)}
+      {scope: "$2", name: "$1", args: JSON.stringify(arg)}
     )
   );
 };
 """
   jsTemplateNoArg = """
-if (typeof api === 'undefined') {
-	api = {};
+if (typeof $2 === 'undefined') {
+	$2 = {};
 }
-api.$1 = function() {
+$2.$1 = function() {
 	window.external.invoke(
     JSON.stringify(
-      {name: "$1", args: ""}
+      {scope: "$2", name: "$1", args: ""}
     )
   );
 };
 """
 
-proc bindProc*[P, R](w: Webview, name: string, p: (proc(param: P): R)) =
+proc bindProc*[P, R](w: Webview, scope, name: string, p: (proc(param: P): R)) =
   proc hook(hookParam: string): string =
     var 
       paramVal: P
@@ -169,21 +170,24 @@ proc bindProc*[P, R](w: Webview, name: string, p: (proc(param: P): R)) =
       return "parse args failed: " & getCurrentExceptionMsg()
     retVal = p(paramVal)
     return $(%*retVal) # ==> json
-  discard eps.hasKeyOrPut(w, newTable[string, CallHook]())
-  eps[w][name] = hook
+  discard eps.hasKeyOrPut(w, newTable[string, TableRef[string, CallHook]]())
+  discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]())
+  eps[w][scope][name] = hook
   # TODO eval jscode
-  discard w.eval(jsTemplate%[name])
+  discard w.eval(jsTemplate%[name, scope])
 
-proc bindProc*(w: Webview, name: string, p: proc()) =
+proc bindProcNoArg*(w: Webview, scope, name: string, p: proc()) =
+  ## unly hack or macro will fail
   proc hook(hookParam: string): string =
     p()
     return ""
-  discard eps.hasKeyOrPut(w, newTable[string, CallHook]())
-  eps[w][name] = hook
+  discard eps.hasKeyOrPut(w, newTable[string, TableRef[string, CallHook]]())
+  discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]())
+  eps[w][scope][name] = hook
   # TODO eval jscode
-  discard w.eval(jsTemplateNoArg%[name])
+  discard w.eval(jsTemplateNoArg%[name, scope])
 
-proc bindProc*[P](w: Webview, name: string, p: proc(arg:P)) =
+proc bindProc*[P](w: Webview, scope, name: string, p: proc(arg:P)) =
   proc hook(hookParam: string): string =
     var 
       paramVal: P
@@ -194,12 +198,13 @@ proc bindProc*[P](w: Webview, name: string, p: proc(arg:P)) =
       return "parse args failed: " & getCurrentExceptionMsg()
     p(paramVal)
     return ""
-  discard eps.hasKeyOrPut(w, newTable[string, CallHook]())
-  eps[w][name] = hook
+  discard eps.hasKeyOrPut(w, newTable[string, TableRef[string, CallHook]]())
+  discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]()) 
+  eps[w][scope][name] = hook
   # TODO eval jscode
-  discard w.eval(jsTemplateOnlyArg%[name])
+  discard w.eval(jsTemplateOnlyArg%[name, scope])
 
-macro bindProc*(w: Webview, n: untyped): untyped =
+macro bindProc*(w: Webview, scope: string, n: untyped): untyped =
   ## proc can have many args but only one return types
   ## and no pragmas
   expectKind(n, nnkStmtList)
@@ -208,20 +213,13 @@ macro bindProc*(w: Webview, n: untyped): untyped =
   for def in n:
     expectKind(def, nnkProcDef)
     let params = def.params()
+    let fname = $def[0]
     # expectKind(params[0], nnkSym)
+    if params.len() == 1 and params[0].kind() == nnkEmpty: # no args
+      result.add(newCall("bindProcNoArg", w, scope, newLit(fname), newIdentNode(fname)))
+      continue 
     if params.len() > 2 :
       error("only proc like `proc fn[T, U](arg: T): U` or `proc fn[T](arg: T)` or `proc()` is allowed", 
             def)
-    let fname = $def[0]
-    result.add(newCall("bindProc", w, newLit(fname), newIdentNode(fname)))
+    result.add(newCall("bindProc", w, scope, newLit(fname), newIdentNode(fname)))
   echo treeRepr result
-
-proc call(w: WebView, mi: MethodInfo):string =
-  let hook = eps[w][mi.name]
-  return hook(mi.args)
-
-proc callEPS*(w: Webview, fn, args: string): string =
-  let mi = MethodInfo(name:fn, args:args)
-  return w.call(mi)
-
-

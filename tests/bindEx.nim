@@ -1,5 +1,6 @@
 import webview
 import os
+import strutils, future
 
 const indexHTML = """
 <!doctype html>
@@ -20,22 +21,20 @@ const indexHTML = """
 	</body>
 </html>
 """
-import strutils, future
 
-import json
-proc main()=
-    let fn="$1/xxx.html"%[getTempDir()]
-    writeFile(fn, indexHTML)
-    defer: removeFile(fn)
-    var w = newWebView("Simple window demo2", "file://" & fn)
-    w.bindProc:
-        proc close() = w.terminate()
-        proc open() = echo w.dialogOpen()
-        proc save() = echo w.dialogSave()
-        proc opendir() = echo w.dialogOpen(flag=dFlagDir)
-        proc message() = w.alert("hello", "world")
-        proc changeTitle(title: string) = w.setTitle(title)
-    defer: w.exit()
-    w.run()
+let fn="$1/xxx.html"%[getTempDir()]
+writeFile(fn, indexHTML)
+var w = newWebView("Simple window demo2", "file://" & fn)
 
-main()
+# expandMacros:
+w.bindProc("api"):
+    proc open() = echo w.dialogOpen()
+    proc save() = echo w.dialogSave()
+    proc opendir() = echo w.dialogOpen(flag=dFlagDir)
+    proc message() = w.alert("hello", "world")
+    proc changeTitle(title: string) = w.setTitle(title)
+    proc close() = w.terminate()
+
+w.run()
+w.exit()
+removeFile(fn)
