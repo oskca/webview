@@ -1259,6 +1259,14 @@ function main() {
     title="dFlagFile = 0"><wbr />d<wbr />Flag<wbr />File<span class="attachedType" style="visibility:hidden"></span></a></li>
   <li><a class="reference" href="#dFlagDir"
     title="dFlagDir = 1"><wbr />d<wbr />Flag<wbr />Dir<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#dFlagInfo"
+    title="dFlagInfo = 2"><wbr />d<wbr />Flag<wbr />Info<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#dFlagWarn"
+    title="dFlagWarn = 4"><wbr />d<wbr />Flag<wbr />Warn<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#dFlagError"
+    title="dFlagError = 6"><wbr />d<wbr />Flag<wbr />Error<span class="attachedType" style="visibility:hidden"></span></a></li>
+  <li><a class="reference" href="#dFlagAlertMask"
+    title="dFlagAlertMask = 6"><wbr />d<wbr />Flag<wbr />Alert<wbr />Mask<span class="attachedType" style="visibility:hidden"></span></a></li>
 
   </ul>
 </li>
@@ -1275,6 +1283,8 @@ function main() {
     title="injectCss(w: Webview; css: cstring): cint"><wbr />inject<wbr />Css<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
   <li><a class="reference" href="#setTitle,Webview,cstring"
     title="setTitle(w: Webview; title: cstring)"><wbr />set<wbr />Title<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#setFullscreen,Webview,cint"
+    title="setFullscreen(w: Webview; fullscreen: cint)"><wbr />set<wbr />Fullscreen<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
   <li><a class="reference" href="#dialog,Webview,DialogType,cint,cstring,cstring,cstring,csize"
     title="dialog(w: Webview; dlgtype: DialogType; flags: cint; title: cstring; arg: cstring;
        result: cstring; resultsz: csize)"><wbr />dialog<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
@@ -1296,13 +1306,21 @@ function main() {
     title="newWebView(title = &quot;WebView&quot;; url = &quot;&quot;; width = 640; height = 480; resizable = true;
            debug = false; cb: ExternalInvokeCb = nil): Webview"><wbr />new<wbr />Web<wbr />View<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
   <li><a class="reference" href="#dialog,Webview,DialogType,int,string,string"
-    title="dialog(w: Webview; dlgType: DialogType; flags: int; title, arg: string): string"><wbr />dialog<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
-  <li><a class="reference" href="#alert,Webview,string,string"
-    title="alert(w: Webview; title, msg: string)"><wbr />alert<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+    title="dialog(w: Webview; dlgType: DialogType; dlgFlag: int; title, arg: string): string"><wbr />dialog<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#msg,Webview,string,string"
+    title="msg(w: Webview; title, msg: string)"><wbr />msg<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#info,Webview,string,string"
+    title="info(w: Webview; title, msg: string)"><wbr />info<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#warn,Webview,string,string"
+    title="warn(w: Webview; title, msg: string)"><wbr />warn<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#error,Webview,string,string"
+    title="error(w: Webview; title, msg: string)"><wbr />error<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
   <li><a class="reference" href="#dialogOpen,Webview,string"
     title="dialogOpen(w: Webview; title = &quot;Open File&quot;; flag = dFlagFile): string"><wbr />dialog<wbr />Open<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
   <li><a class="reference" href="#dialogSave,Webview,string"
     title="dialogSave(w: Webview; title = &quot;Save File&quot;; flag = dFlagFile): string"><wbr />dialog<wbr />Save<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+  <li><a class="reference" href="#setFullscreen,Webview"
+    title="setFullscreen(w: Webview; fullscree = true)"><wbr />set<wbr />Fullscreen<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
   <li><a class="reference" href="#run,Webview"
     title="run(w: Webview)"><wbr />run<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
   <li><a class="reference" href="#open,string,string,int,int"
@@ -1319,8 +1337,8 @@ function main() {
 <li>
   <a class="reference reference-toplevel" href="#16" id="66">Macros</a>
   <ul class="simple simple-toc-section">
-      <li><a class="reference" href="#bindProc.m,Webview,string,untyped"
-    title="bindProc(w: Webview; scope: string; n: untyped): untyped"><wbr />bind<wbr />Proc<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
+      <li><a class="reference" href="#bindProcs.m,Webview,string,untyped"
+    title="bindProcs(w: Webview; scope: string; n: untyped): untyped"><wbr />bind<wbr />Procs<span class="attachedType" style="visibility:hidden">Webview</span></a></li>
 
   </ul>
 </li>
@@ -1409,6 +1427,26 @@ function main() {
 
 
 </dd>
+<dt id="dFlagInfo"><a name="dFlagInfo"></a><pre><span class="Identifier">dFlagInfo</span> <span class="Other">=</span> <span class="DecNumber">2</span></pre></dt>
+<dd>
+
+
+</dd>
+<dt id="dFlagWarn"><a name="dFlagWarn"></a><pre><span class="Identifier">dFlagWarn</span> <span class="Other">=</span> <span class="DecNumber">4</span></pre></dt>
+<dd>
+
+
+</dd>
+<dt id="dFlagError"><a name="dFlagError"></a><pre><span class="Identifier">dFlagError</span> <span class="Other">=</span> <span class="DecNumber">6</span></pre></dt>
+<dd>
+
+
+</dd>
+<dt id="dFlagAlertMask"><a name="dFlagAlertMask"></a><pre><span class="Identifier">dFlagAlertMask</span> <span class="Other">=</span> <span class="DecNumber">6</span></pre></dt>
+<dd>
+
+
+</dd>
 
 </dl></div>
 <div class="section" id="12">
@@ -1438,6 +1476,12 @@ function main() {
 </dd>
 <dt id="setTitle"><a name="setTitle,Webview,cstring"></a><pre><span class="Keyword">proc</span> <span class="Identifier">setTitle</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_set_title&quot;</span><span class="Other">,</span>
                                        <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dd>
+
+
+</dd>
+<dt id="setFullscreen"><a name="setFullscreen,Webview,cint"></a><pre><span class="Keyword">proc</span> <span class="Identifier">setFullscreen</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">fullscreen</span><span class="Other">:</span> <span class="Identifier">cint</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">importc</span><span class="Other">:</span> <span class="StringLit">&quot;webview_set_fullscreen&quot;</span><span class="Other">,</span>
+    <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 
 
@@ -1494,15 +1538,30 @@ Set external invoke callback for webview
 <tt class="docutils literal"><span class="pre">newWebView</span></tt> creates and opens a new webview window using the given settings. This function will do webview <tt class="docutils literal"><span class="pre">init</span></tt>
 
 </dd>
-<dt id="dialog"><a name="dialog,Webview,DialogType,int,string,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">dialog</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">dlgType</span><span class="Other">:</span> <span class="Identifier">DialogType</span><span class="Other">;</span> <span class="Identifier">flags</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">,</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other pragmabegin">{.</span><div class="pragma">
+<dt id="dialog"><a name="dialog,Webview,DialogType,int,string,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">dialog</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">dlgType</span><span class="Other">:</span> <span class="Identifier">DialogType</span><span class="Other">;</span> <span class="Identifier">dlgFlag</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">,</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other pragmabegin">{.</span><div class="pragma">
     <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 dialog() opens a system dialog of the given type and title. String argument can be provided for certain dialogs, such as alert boxes. For alert boxes argument is a message inside the dialog box.
 
 </dd>
-<dt id="alert"><a name="alert,Webview,string,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">alert</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">,</span> <span class="Identifier">msg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dt id="msg"><a name="msg,Webview,string,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">msg</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">,</span> <span class="Identifier">msg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dd>
+Show one message box
+
+</dd>
+<dt id="info"><a name="info,Webview,string,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">info</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">,</span> <span class="Identifier">msg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 Show one alert box
+
+</dd>
+<dt id="warn"><a name="warn,Webview,string,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">warn</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">,</span> <span class="Identifier">msg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dd>
+Show one warn box
+
+</dd>
+<dt id="error"><a name="error,Webview,string,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">error</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">,</span> <span class="Identifier">msg</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dd>
+Show one error box
 
 </dd>
 <dt id="dialogOpen"><a name="dialogOpen,Webview,string"></a><pre><span class="Keyword">proc</span> <span class="Identifier">dialogOpen</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">title</span> <span class="Other">=</span> <span class="StringLit">&quot;Open File&quot;</span><span class="Other">;</span> <span class="Identifier">flag</span> <span class="Other">=</span> <span class="Identifier">dFlagFile</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">string</span> <span class="Other pragmabegin">{.</span><div class="pragma">
@@ -1515,6 +1574,11 @@ Opens a dialog that requests filenames from the user. Returns &quot;&quot; if th
     <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">Exception</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
 Opens a dialog that requests a filename to save to from the user. Returns &quot;&quot; if the user closed the dialog without selecting a file.
+
+</dd>
+<dt id="setFullscreen"><a name="setFullscreen,Webview"></a><pre><span class="Keyword">proc</span> <span class="Identifier">setFullscreen</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">fullscree</span> <span class="Other">=</span> <span class="Identifier">true</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
+<dd>
+
 
 </dd>
 <dt id="run"><a name="run,Webview"></a><pre><span class="Keyword">proc</span> <span class="Identifier">run</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
@@ -1538,7 +1602,7 @@ Opens a dialog that requests a filename to save to from the user. Returns &quot;
 <dt id="bindProcNoArg"><a name="bindProcNoArg,Webview,string,string,proc)"></a><pre><span class="Keyword">proc</span> <span class="Identifier">bindProcNoArg</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">scope</span><span class="Other">,</span> <span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Other">)</span><span class="Other">)</span> <span class="Other pragmabegin">{.</span><div class="pragma">
     <span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">KeyError</span><span class="Other">,</span> <span class="Identifier">Exception</span><span class="Other">,</span> <span class="Identifier">ValueError</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Identifier">RootEffect</span><span class="Other">]</span></div><span class="Other pragmaend">.}</span></pre></dt>
 <dd>
-unly hack or macro will fail
+ugly hack or macro will fail
 
 </dd>
 <dt id="bindProc"><a name="bindProc,Webview,string,string,proc(P)"></a><pre><span class="Keyword">proc</span> <span class="Identifier">bindProc</span><span class="Other">[</span><span class="Identifier">P</span><span class="Other">]</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">scope</span><span class="Other">,</span> <span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">p</span><span class="Other">:</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">P</span><span class="Other">)</span><span class="Other">)</span></pre></dt>
@@ -1551,9 +1615,13 @@ unly hack or macro will fail
 <div class="section" id="16">
 <h1><a class="toc-backref" href="#16">Macros</a></h1>
 <dl class="item">
-<dt id="bindProc"><a name="bindProc.m,Webview,string,untyped"></a><pre><span class="Keyword">macro</span> <span class="Identifier">bindProc</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">scope</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">n</span><span class="Other">:</span> <span class="Identifier">untyped</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
+<dt id="bindProcs"><a name="bindProcs.m,Webview,string,untyped"></a><pre><span class="Keyword">macro</span> <span class="Identifier">bindProcs</span><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Identifier">Webview</span><span class="Other">;</span> <span class="Identifier">scope</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">n</span><span class="Other">:</span> <span class="Identifier">untyped</span><span class="Other">)</span><span class="Other">:</span> <span class="Identifier">untyped</span></pre></dt>
 <dd>
-proc can have many args but only one return types and no pragmas
+bind procs like:<pre class="listing"><span class="Keyword">proc</span> <span class="Identifier">fn</span><span class="Punctuation">[</span><span class="Identifier">T</span><span class="Punctuation">,</span> <span class="Identifier">U</span><span class="Punctuation">]</span><span class="Punctuation">(</span><span class="Identifier">arg</span><span class="Punctuation">:</span> <span class="Identifier">T</span><span class="Punctuation">)</span><span class="Punctuation">:</span> <span class="Identifier">U</span>
+<span class="Keyword">proc</span> <span class="Identifier">fn</span><span class="Punctuation">[</span><span class="Identifier">T</span><span class="Punctuation">]</span><span class="Punctuation">(</span><span class="Identifier">arg</span><span class="Punctuation">:</span> <span class="Identifier">T</span><span class="Punctuation">)</span>
+<span class="Keyword">proc</span> <span class="Identifier">fn</span><span class="Punctuation">(</span><span class="Punctuation">)</span></pre><p>to webview <tt class="docutils literal"><span class="pre">w</span></tt>, in scope <tt class="docutils literal"><span class="pre">scope</span></tt> then you can invode in js side, like this:</p>
+<pre class="listing">
+scope.fn(arg)</pre>
 
 </dd>
 
@@ -1566,7 +1634,7 @@ proc can have many args but only one return types and no pragmas
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small>Made with Nim. Generated: 2018-01-08 23:58:01 UTC</small>
+        <small>Made with Nim. Generated: 2018-01-10 21:23:12 UTC</small>
       </div>
     </div>
   </div>

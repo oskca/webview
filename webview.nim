@@ -192,7 +192,7 @@ proc bindProc*[P, R](w: Webview, scope, name: string, p: (proc(param: P): R)) =
   discard w.eval(jsTemplate%[name, scope])
 
 proc bindProcNoArg*(w: Webview, scope, name: string, p: proc()) =
-  ## unly hack or macro will fail
+  ## ugly hack or macro will fail
   proc hook(hookParam: string): string =
     p()
     return ""
@@ -219,21 +219,38 @@ proc bindProc*[P](w: Webview, scope, name: string, p: proc(arg:P)) =
   # TODO eval jscode
   discard w.eval(jsTemplateOnlyArg%[name, scope])
 
-macro bindProc*(w: Webview, scope: string, n: untyped): untyped =
-  ## proc can have many args but only one return types
-  ## and no pragmas
+macro bindProcs*(w: Webview, scope: string, n: untyped): untyped =
+  ## bind procs like:
+  ##
+  ## .. code-block:: nim
+  ## 
+  ##    proc fn[T, U](arg: T): U
+  ##    proc fn[T](arg: T)
+  ##    proc fn()
+  ##
+  ## to webview ``w``, in scope ``scope``
+  ## then you can invode in js side, like this:
+  ##
+  ## .. code-block:: js
+  ## 
+  ##    scope.fn(arg)
+  ##
   expectKind(n, nnkStmtList)
-  result = n
+  let body = n
   for def in n:
     expectKind(def, nnkProcDef)
     let params = def.params()
     let fname = $def[0]
     # expectKind(params[0], nnkSym)
     if params.len() == 1 and params[0].kind() == nnkEmpty: # no args
-      result.add(newCall("bindProcNoArg", w, scope, newLit(fname), newIdentNode(fname)))
+      body.add(newCall("bindProcNoArg", w, scope, newLit(fname), newIdentNode(fname)))
       continue 
     if params.len() > 2 :
-      error("only proc like `proc fn[T, U](arg: T): U` or `proc fn[T](arg: T)` or `proc()` is allowed", 
+      error("""only proc like `proc fn[T, U](arg: T): U` or 
+              `proc fn[T](arg: T)` or 
+              `proc()`
+            is allowed""", 
             def)
-    result.add(newCall("bindProc", w, scope, newLit(fname), newIdentNode(fname)))
-  echo treeRepr result
+    body.add(newCall("bindProc", w, scope, newLit(fname), newIdentNode(fname)))
+  result = newBlockStmt(body)
+  echo repr result
