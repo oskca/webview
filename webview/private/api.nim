@@ -19,6 +19,10 @@ type
 const
   dFlagFile* = 0
   dFlagDir* = 1
+  dFlagInfo* = 1 shl 1
+  dFlagWarn* = 2 shl 1
+  dFlagError* = 3 shl 1
+  dFlagAlertMask* = 3 shl 1
 
 type
   DispatchFn* = proc (w: Webview; arg: pointer)
@@ -35,6 +39,8 @@ proc eval*(w: Webview; js: cstring): cint {.importc: "webview_eval",
 proc injectCss*(w: Webview; css: cstring): cint {.importc: "webview_inject_css",
     header: "webview.h".}
 proc setTitle*(w: Webview; title: cstring) {.importc: "webview_set_title",
+    header: "webview.h".}
+proc setFullscreen*(w: Webview; fullscreen: cint) {.importc: "webview_set_fullscreen",
     header: "webview.h".}
 proc dialog*(w: Webview; dlgtype: DialogType; flags: cint; title: cstring;
             arg: cstring; result: cstring; resultsz: csize) {.

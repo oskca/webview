@@ -78,19 +78,31 @@ proc newWebView*(title="WebView", url="",
   if w.init() != 0: return nil
   return w
 
-proc dialog*(w :Webview, dlgType: DialogType, flags: int, title, arg: string): string =
+proc dialog*(w :Webview, dlgType: DialogType, dlgFlag: int, title, arg: string): string =
   ## dialog() opens a system dialog of the given type and title. String
   ## argument can be provided for certain dialogs, such as alert boxes. For
   ## alert boxes argument is a message inside the dialog box.
   let maxPath = 4096
   let resultPtr = cast[cstring](alloc0(maxPath))
   defer: dealloc(resultPtr)
-  w.dialog(dlgType, flags.cint, title.cstring, arg.cstring, resultPtr, maxPath.csize) 
+  w.dialog(dlgType, dlgFlag.cint, title.cstring, arg.cstring, resultPtr, maxPath.csize) 
   return $resultPtr
 
-proc alert*(w: Webview, title, msg: string) =
-  ## Show one alert box
+proc msg*(w: Webview, title, msg: string) =
+  ## Show one message box
   discard w.dialog(dtAlert, 0, title, msg)
+
+proc info*(w: Webview, title, msg: string) =
+  ## Show one alert box
+  discard w.dialog(dtAlert, dFlagInfo, title, msg)
+
+proc warn*(w: Webview, title, msg: string) =
+  ## Show one warn box
+  discard w.dialog(dtAlert, dFlagWarn, title, msg)
+
+proc error*(w: Webview, title, msg: string) =
+  ## Show one error box
+  discard w.dialog(dtAlert, dFlagError, title, msg)
 
 proc dialogOpen*(w: Webview, title="Open File", flag=dFlagFile): string =
   ## Opens a dialog that requests filenames from the user. Returns ""
@@ -101,6 +113,9 @@ proc dialogSave*(w: Webview, title="Save File", flag=dFlagFile): string =
   ## Opens a dialog that requests a filename to save to from the user.
   ## Returns "" if the user closed the dialog without selecting a file.
   return w.dialog(dtSave, flag, title, "")
+
+proc setFullscreen*(w: Webview, fullscree=true) =
+  if fullscree: setFullscreen(w, 1) else: setFullscreen(w, 0)
 
 proc run*(w: Webview)=
   ## ``run`` starts the main UI loop until the user closes the webview window or
@@ -209,7 +224,6 @@ macro bindProc*(w: Webview, scope: string, n: untyped): untyped =
   ## and no pragmas
   expectKind(n, nnkStmtList)
   result = n
-  var nProc = 0
   for def in n:
     expectKind(def, nnkProcDef)
     let params = def.params()

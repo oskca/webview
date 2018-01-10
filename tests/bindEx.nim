@@ -14,6 +14,9 @@ const indexHTML = """
 		<button onclick="api.opendir()">Open directory</button>
 		<button onclick="api.save()">Save</button>
 		<button onclick="api.message()">Message</button>
+		<button onclick="api.info()">info</button>
+		<button onclick="api.warn()">warn</button>
+		<button onclick="api.error()">error</button>
 		<button onclick="api.changeTitle(document.getElementById('new-title').value)">
 			Change title
 		</button>
@@ -31,10 +34,14 @@ w.bindProc("api"):
     proc open() = echo w.dialogOpen()
     proc save() = echo w.dialogSave()
     proc opendir() = echo w.dialogOpen(flag=dFlagDir)
-    proc message() = w.alert("hello", "world")
+    proc message() = w.msg("hello", "message")
+    proc info() = w.info("hello", "info")
+    proc warn() = w.warn("hello", "warn")
+    proc error() = w.error("hello", "error")
     proc changeTitle(title: string) = w.setTitle(title)
     proc close() = w.terminate()
 
+w.setFullscreen()
 w.run()
 w.exit()
 removeFile(fn)

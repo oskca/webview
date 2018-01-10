@@ -36,6 +36,10 @@ struct webview_priv {
 struct webview_priv {
   HWND hwnd;
   IOleObject **browser;
+  BOOL is_fullscreen;
+  DWORD saved_style;
+  DWORD saved_ex_style;
+  RECT saved_rect;
 };
 #elif defined(WEBVIEW_COCOA)
 #import <Cocoa/Cocoa.h>
@@ -79,6 +83,11 @@ enum webview_dialog_type {
 #define WEBVIEW_DIALOG_FLAG_FILE (0 << 0)
 #define WEBVIEW_DIALOG_FLAG_DIRECTORY (1 << 0)
 
+#define WEBVIEW_DIALOG_FLAG_INFO (1 << 1)
+#define WEBVIEW_DIALOG_FLAG_WARNING (2 << 1)
+#define WEBVIEW_DIALOG_FLAG_ERROR (3 << 1)
+#define WEBVIEW_DIALOG_FLAG_ALERT_MASK (3 << 1)
+
 typedef void (*webview_dispatch_fn)(struct webview *w, void *arg);
 
 struct webview_dispatch_arg {
@@ -114,6 +123,7 @@ static int webview_loop(struct webview *w, int blocking);
 static int webview_eval(struct webview *w, const char *js);
 static int webview_inject_css(struct webview *w, const char *css);
 static void webview_set_title(struct webview *w, const char *title);
+static void webview_set_fullscreen(struct webview *w, int fullscreen);
 static void webview_dialog(struct webview *w, enum webview_dialog_type dlgtype,
                            int flags, const char *title, const char *arg,
                            char *result, size_t resultsz);
@@ -302,6 +312,14 @@ static void webview_set_title(struct webview *w, const char *title) {
   gtk_window_set_title(GTK_WINDOW(w->priv.window), title);
 }
 
+static void webview_set_fullscreen(struct webview *w, int fullscreen) {
+  if (fullscreen) {
+    gtk_window_fullscreen(GTK_WINDOW(w->priv.window));
+  } else {
+    gtk_window_unfullscreen(GTK_WINDOW(w->priv.window));
+  }
+}
+
 static void webview_dialog(struct webview *w, enum webview_dialog_type dlgtype,
                            int flags, const char *title, const char *arg,
                            char *result, size_t resultsz) {
@@ -334,9 +352,20 @@ static void webview_dialog(struct webview *w, enum webview_dialog_type dlgtype,
     }
     gtk_widget_destroy(dlg);
   } else if (dlgtype == WEBVIEW_DIALOG_TYPE_ALERT) {
-    dlg =
-        gtk_message_dialog_new(GTK_WINDOW(w->priv.window), GTK_DIALOG_MODAL,
-                               GTK_MESSAGE_OTHER, GTK_BUTTONS_OK, "%s", title);
+    GtkMessageType type = GTK_MESSAGE_OTHER;
+    switch (flags & WEBVIEW_DIALOG_FLAG_ALERT_MASK) {
+    case WEBVIEW_DIALOG_FLAG_INFO:
+      type = GTK_MESSAGE_INFO;
+      break;
+    case WEBVIEW_DIALOG_FLAG_WARNING:
+      type = GTK_MESSAGE_WARNING;
+      break;
+    case WEBVIEW_DIALOG_FLAG_ERROR:
+      type = GTK_MESSAGE_ERROR;
+      break;
+    }
+    dlg = gtk_message_dialog_new(GTK_WINDOW(w->priv.window), GTK_DIALOG_MODAL,
+                                 type, GTK_BUTTONS_OK, "%s", title);
     gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dlg), "%s",
                                              arg);
     gtk_dialog_run(GTK_DIALOG(dlg));
@@ -1263,6 +1292,35 @@ static void webview_set_title(struct webview *w, const char *title) {
   SetWindowText(w->priv.hwnd, title);
 }
 
+static void webview_set_fullscreen(struct webview *w, int fullscreen) {
+  if (w->priv.is_fullscreen == !!fullscreen) {
+    return;
+  }
+  if (w->priv.is_fullscreen == 0) {
+    w->priv.saved_style = GetWindowLong(w->priv.hwnd, GWL_STYLE);
+    w->priv.saved_ex_style = GetWindowLong(w->priv.hwnd, GWL_EXSTYLE);
+    GetWindowRect(w->priv.hwnd, &w->priv.saved_rect);
+  }
+  w->priv.is_fullscreen = !!fullscreen;
+  if (fullscreen) {
+    MONITORINFO monitor_info;
+    SetWindowLong(w->priv.hwnd, GWL_STYLE, w->priv.saved_style & ~(WS_CAPTION | WS_THICKFRAME));
+    SetWindowLong(w->priv.hwnd, GWL_EXSTYLE, w->priv.saved_ex_style & ~(WS_EX_DLGMODALFRAME |  WS_EX_WINDOWEDGE | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE));
+    monitor_info.cbSize = sizeof(monitor_info);
+    GetMonitorInfo(MonitorFromWindow(w->priv.hwnd, MONITOR_DEFAULTTONEAREST), &monitor_info);
+    RECT r;
+    r.left = monitor_info.rcMonitor.left;
+    r.top = monitor_info.rcMonitor.top;
+    r.right = monitor_info.rcMonitor.right;
+    r.bottom = monitor_info.rcMonitor.bottom;
+    SetWindowPos(w->priv.hwnd, NULL, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  } else {
+    SetWindowLong(w->priv.hwnd, GWL_STYLE, w->priv.saved_style);
+    SetWindowLong(w->priv.hwnd, GWL_EXSTYLE, w->priv.saved_ex_style);
+    SetWindowPos(w->priv.hwnd, NULL, w->priv.saved_rect.left, w->priv.saved_rect.top, w->priv.saved_rect.right - w->priv.saved_rect.left, w->priv.saved_rect.bottom - w->priv.saved_rect.top, SWP_NOZORDER | SWP_NOACTIVATE | SWP_FRAMECHANGED);
+  }
+}
+
 /* These are missing parts from MinGW */
 #ifndef __IFileDialog_INTERFACE_DEFINED__
 #define __IFileDialog_INTERFACE_DEFINED__
@@ -1416,7 +1474,19 @@ static void webview_dialog(struct webview *w, enum webview_dialog_type dlgtype,
     GlobalFree(warg);
     GlobalFree(wtitle);
 #else
-    MessageBox(w->priv.hwnd, arg, title, MB_OK);
+    UINT type = MB_OK;
+    switch (flags & WEBVIEW_DIALOG_FLAG_ALERT_MASK) {
+    case WEBVIEW_DIALOG_FLAG_INFO:
+      type |= MB_ICONINFORMATION;
+      break;
+    case WEBVIEW_DIALOG_FLAG_WARNING:
+      type |= MB_ICONWARNING;
+      break;
+    case WEBVIEW_DIALOG_FLAG_ERROR:
+      type |= MB_ICONERROR;
+      break;
+    }
+    MessageBox(w->priv.hwnd, arg, title, type);
 #endif
   }
 }
@@ -1434,6 +1504,7 @@ static void webview_print_log(const char *s) { OutputDebugString(s); }
 #define NSWindowStyleMaskMiniaturizable NSMiniaturizableWindowMask
 #define NSWindowStyleMaskTitled NSTitledWindowMask
 #define NSWindowStyleMaskClosable NSClosableWindowMask
+#define NSWindowStyleMaskFullScreen NSFullScreenWindowMask
 #define NSEventMaskAny NSAnyEventMask
 #define NSEventModifierFlagCommand NSCommandKeyMask
 #define NSEventModifierFlagOption NSAlternateKeyMask
@@ -1599,6 +1670,13 @@ static void webview_set_title(struct webview *w, const char *title) {
   [w->priv.window setTitle:nsTitle];
 }
 
+static void webview_set_fullscreen(struct webview *w, int fullscreen) {
+  int b = ((([w->priv.window styleMask] & NSWindowStyleMaskFullScreen) == NSWindowStyleMaskFullScreen) ? 1 : 0);
+  if (b != fullscreen) {
+    [w->priv.window toggleFullScreen:nil];
+  }
+}
+
 static void webview_dialog(struct webview *w, enum webview_dialog_type dlgtype,
                            int flags, const char *title, const char *arg,
                            char *result, size_t resultsz) {
@@ -1635,7 +1713,19 @@ static void webview_dialog(struct webview *w, enum webview_dialog_type dlgtype,
     }
   } else if (dlgtype == WEBVIEW_DIALOG_TYPE_ALERT) {
     NSAlert *a = [NSAlert new];
-    [a setAlertStyle:NSAlertStyleInformational];
+    switch (flags & WEBVIEW_DIALOG_FLAG_ALERT_MASK) {
+    case WEBVIEW_DIALOG_FLAG_INFO:
+      [a setAlertStyle:NSAlertStyleInformational];
+      break;
+    case WEBVIEW_DIALOG_FLAG_WARNING:
+      NSLog(@"warning");
+      [a setAlertStyle:NSAlertStyleWarning];
+      break;
+    case WEBVIEW_DIALOG_FLAG_ERROR:
+      NSLog(@"error");
+      [a setAlertStyle:NSAlertStyleCritical];
+      break;
+    }
     [a setShowsHelp:NO];
     [a setShowsSuppressionButton:NO];
     [a setMessageText:[NSString stringWithUTF8String:title]];
