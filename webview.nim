@@ -1,14 +1,12 @@
+{.passC: "-I" & currentSourcePath().substr(0, high(currentSourcePath()) - 4) .}
 when defined(linux):
-  {.passC: "-I" & staticExec("pwd") & "/webview".}
   {.passC: "-DWEBVIEW_GTK=1" &
           staticExec"pkg-config --cflags gtk+-3.0 webkit2gtk-4.0".}
   {.passL: staticExec"pkg-config --libs gtk+-3.0 webkit2gtk-4.0".}
 elif defined(windows):
-  {.passC: "-I." & staticExec("cmd /c cd").}
   {.passC: "-DWEBVIEW_WINAPI=1".}
   {.passL: "-lole32 -lcomctl32 -loleaut32 -luuid -mwindows".}
 elif defined(darwin):
-  {.passC: "-I" & staticExec("pwd") & "/webview".}
   {.passC: "-DWEBVIEW_COCOA=1 -x objective-c".}
   {.passL: "-framework Cocoa -framework WebKit".}
 
