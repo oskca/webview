@@ -113,8 +113,10 @@ proc dialogSave*(w: Webview, title="Save File", flag=dFlagFile): string =
   ## Returns "" if the user closed the dialog without selecting a file.
   return w.dialog(dtSave, flag, title, "")
 
-proc setFullscreen*(w: Webview, fullscree=true) =
+proc setFullscreen*(w: Webview, fullscree=true): bool =
+  ## setFullscreen according to `fullscree` and return `fullscree`
   if fullscree: setFullscreen(w, 1) else: setFullscreen(w, 0)
+  return fullscree
 
 proc run*(w: Webview)=
   ## ``run`` starts the main UI loop until the user closes the webview window or

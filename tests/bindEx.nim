@@ -17,6 +17,8 @@ const indexHTML = """
         <button onclick="api.info()">info</button>
         <button onclick="api.warn()">warn</button>
         <button onclick="api.error()">error</button>
+        <button onclick="api.changeColor()">changeColor</button>
+        <button onclick="api.toggleFullScreen()">toggleFullScreen</button>
         <button onclick="api.changeTitle(document.getElementById('new-title').value)">
             Change title
         </button>
@@ -28,7 +30,7 @@ const indexHTML = """
 let fn="$1/xxx.html"%[getTempDir()]
 writeFile(fn, indexHTML)
 var w = newWebView("Simple window demo2", "file://" & fn)
-
+var fullScreen = true
 w.bindProcs("api"):
     proc open() = echo w.dialogOpen()
     proc save() = echo w.dialogSave()
@@ -39,6 +41,8 @@ w.bindProcs("api"):
     proc error() = w.error("hello", "error")
     proc changeTitle(title: string) = w.setTitle(title)
     proc close() = w.terminate()
+    proc changeColor() = w.setColor(210,210,210,100)
+    proc toggleFullScreen() = fullScreen = not w.setFullscreen(fullScreen)
 
 # w.setFullscreen()
 w.run()
