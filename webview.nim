@@ -7,7 +7,7 @@ when defined(linux):
 elif defined(windows):
   {.passC: "-DWEBVIEW_WINAPI=1".}
   {.passL: "-lole32 -lcomctl32 -loleaut32 -luuid -mwindows".}
-elif defined(darwin):
+elif defined(macosx):
   {.passC: "-DWEBVIEW_COCOA=1 -x objective-c".}
   {.passL: "-framework Cocoa -framework WebKit".}
 
