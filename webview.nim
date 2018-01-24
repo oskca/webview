@@ -77,6 +77,20 @@ proc newWebView*(title="WebView", url="",
   if w.init() != 0: return nil
   return w
 
+# for dispatch
+
+var dispatchTable = newTable[int, DispatchFn]()
+
+proc generalDispatchProc(w: Webview, arg: pointer) {.exportc.} =
+  let idx = cast[int](arg)
+  let fn = dispatchTable[idx]
+  fn()
+
+proc dispatch*(w: Webview, fn: DispatchFn) =
+  let idx = dispatchTable.len()+1
+  dispatchTable[idx] = fn
+  dispatch(w, generalDispatchProc, cast[pointer](idx))
+
 proc dialog*(w :Webview, dlgType: DialogType, dlgFlag: int, title, arg: string): string =
   ## dialog() opens a system dialog of the given type and title. String
   ## argument can be provided for certain dialogs, such as alert boxes. For
@@ -190,7 +204,7 @@ proc bindProc*[P, R](w: Webview, scope, name: string, p: (proc(param: P): R)) =
   discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]())
   eps[w][scope][name] = hook
   # TODO eval jscode
-  discard w.eval(jsTemplate%[name, scope])
+  w.dispatch(proc() = discard w.eval(jsTemplate%[name, scope]))
 
 proc bindProcNoArg*(w: Webview, scope, name: string, p: proc()) =
   ## ugly hack or macro will fail
@@ -201,7 +215,7 @@ proc bindProcNoArg*(w: Webview, scope, name: string, p: proc()) =
   discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]())
   eps[w][scope][name] = hook
   # TODO eval jscode
-  discard w.eval(jsTemplateNoArg%[name, scope])
+  w.dispatch(proc() = discard w.eval(jsTemplateNoArg%[name, scope]))
 
 proc bindProc*[P](w: Webview, scope, name: string, p: proc(arg:P)) =
   proc hook(hookParam: string): string =
@@ -218,7 +232,7 @@ proc bindProc*[P](w: Webview, scope, name: string, p: proc(arg:P)) =
   discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]()) 
   eps[w][scope][name] = hook
   # TODO eval jscode
-  discard w.eval(jsTemplateOnlyArg%[name, scope])
+  w.dispatch(proc() = discard w.eval(jsTemplateOnlyArg%[name, scope]))
 
 macro bindProcs*(w: Webview, scope: string, n: untyped): untyped =
   ## bind procs like:

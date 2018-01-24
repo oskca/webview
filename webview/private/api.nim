@@ -25,11 +25,11 @@ const
   dFlagAlertMask* = 3 shl 1
 
 type
-  DispatchFn* = proc (w: Webview; arg: pointer)
-  DispatchArg* {.importc: "webview_dispatch_arg", header: "webview.h", bycopy.} = object
-    fn* {.importc: "fn".}: DispatchFn
-    w* {.importc: "w".}: Webview
-    arg* {.importc: "arg".}: pointer
+  DispatchFn* = proc()
+  # DispatchArg* {.importc: "webview_dispatch_arg", header: "webview.h", bycopy.} = object
+  #   fn* {.importc: "fn".}: DispatchFn
+  #   w* {.importc: "w".}: Webview
+  #   arg* {.importc: "arg".}: pointer
 
 proc init*(w: Webview): cint {.importc: "webview_init", header: "webview.h".}
 proc loop*(w: Webview; blocking: cint): cint {.importc: "webview_loop", header: "webview.h".}
@@ -40,7 +40,7 @@ proc setColor*(w: Webview; r,g,b,a: uint8) {.importc: "webview_set_color", heade
 proc setFullscreen*(w: Webview; fullscreen: cint) {.importc: "webview_set_fullscreen", header: "webview.h".}
 proc dialog*(w: Webview; dlgtype: DialogType; flags: cint; title: cstring; arg: cstring; result: cstring; resultsz: csize) {.
     importc: "webview_dialog", header: "webview.h".}
-proc dispatch*(w: Webview; fn: DispatchFn; arg: pointer) {.importc: "webview_dispatch", header: "webview.h".}
+proc dispatch(w: Webview; fn: pointer; arg: pointer) {.importc: "webview_dispatch", header: "webview.h".}
 proc terminate*(w: Webview) {.importc: "webview_terminate", header: "webview.h".}
 proc exit*(w: Webview) {.importc: "webview_exit", header: "webview.h".}
 proc debug*(format: cstring) {.varargs, importc: "webview_debug", header: "webview.h".}
