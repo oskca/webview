@@ -1,15 +1,25 @@
-# Webview for nim
+# Webview binding for nim
 
-Nim bindings for [zserge's Webview](https://github.com/zserge/webview) which is an
-excellent cross-platform single header webview
-library for C/C++ using Gtk, Cocoa or MSHTML
-repectively.
+Nim bindings for [zserge's Webview](https://github.com/webview/webview) which is Tiny cross-platform webview library for C/C++/Golang. Uses WebKit (Gtk/Cocoa) and Edge (Windows) 
 
-# Docs
+# E.G.
+
+```nim
+import webview
+
+var w = create(0,nil)
+w.set_title("Webview Nim Example")
+w.set_size(480, 320, WEBVIEW_HINT_NONE)
+w.navigate("https://en.m.wikipedia.org/wiki/Main_Page")
+w.run()
+w.destroy()
+```
+
+
+
+# API Docs
 
 Documentation is [here](http://htmlpreview.github.io/?https://github.com/oskca/webview/blob/master/docs/webview.html)
 
-and [Golang's doc for webview](https://godoc.org/github.com/zserge/webview) is
-also very useful.
 
 When on `debian/ubuntu` `libwebkit2gtk-4.0-dev` is required as `debian/ubuntu`.
