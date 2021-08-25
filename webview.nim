@@ -56,7 +56,7 @@ proc injectCss*(w: Webview; css: cstring): cint {.importc: "webview_inject_css",
 proc setTitle*(w: Webview; title: cstring) {.importc: "webview_set_title", header: "webview.h".}
 proc setColor*(w: Webview; r,g,b,a: uint8) {.importc: "webview_set_color", header: "webview.h".}
 proc setFullscreen*(w: Webview; fullscreen: cint) {.importc: "webview_set_fullscreen", header: "webview.h".}
-proc dialog*(w: Webview; dlgtype: DialogType; flags: cint; title: cstring; arg: cstring; result: cstring; resultsz: csize) {.
+proc dialog*(w: Webview; dlgtype: DialogType; flags: cint; title: cstring; arg: cstring; result: cstring; resultsz: csize_t; filter: cstring) {.
     importc: "webview_dialog", header: "webview.h".}
 proc dispatch(w: Webview; fn: pointer; arg: pointer) {.importc: "webview_dispatch", header: "webview.h".}
 proc terminate*(w: Webview) {.importc: "webview_terminate", header: "webview.h".}
@@ -132,14 +132,14 @@ proc dispatch*(w: Webview, fn: DispatchFn) =
   dispatchTable[idx] = fn
   dispatch(w, generalDispatchProc, cast[pointer](idx))
 
-proc dialog*(w :Webview, dlgType: DialogType, dlgFlag: int, title, arg: string): string =
+proc dialog*(w :Webview, dlgType: DialogType, dlgFlag: int, title, arg: string, filter: string = ""): string =
   ## dialog() opens a system dialog of the given type and title. String
   ## argument can be provided for certain dialogs, such as alert boxes. For
   ## alert boxes argument is a message inside the dialog box.
   let maxPath = 4096
   let resultPtr = cast[cstring](alloc0(maxPath))
   defer: dealloc(resultPtr)
-  w.dialog(dlgType, dlgFlag.cint, title.cstring, arg.cstring, resultPtr, maxPath.csize) 
+  w.dialog(dlgType, dlgFlag.cint, title.cstring, arg.cstring, resultPtr, maxPath.csize_t, filter.cstring) 
   return $resultPtr
 
 proc msg*(w: Webview, title, msg: string) =
@@ -158,15 +158,15 @@ proc error*(w: Webview, title, msg: string) =
   ## Show one error box
   discard w.dialog(dtAlert, dFlagError, title, msg)
 
-proc dialogOpen*(w: Webview, title="Open File", flag=dFlagFile): string =
+proc dialogOpen*(w: Webview, title="Open File", flag=dFlagFile, filter=""): string =
   ## Opens a dialog that requests filenames from the user. Returns ""
   ## if the user closed the dialog without selecting a file. 
-  return w.dialog(dtOpen, flag, title, "")
+  return w.dialog(dtOpen, flag, title, "", filter=filter)
 
-proc dialogSave*(w: Webview, title="Save File", flag=dFlagFile): string =
+proc dialogSave*(w: Webview, title="Save File", flag=dFlagFile, filter=""): string =
   ## Opens a dialog that requests a filename to save to from the user.
   ## Returns "" if the user closed the dialog without selecting a file.
-  return w.dialog(dtSave, flag, title, "")
+  return w.dialog(dtSave, flag, title, "", filter=filter)
 
 proc setFullscreen*(w: Webview, fullscree=true): bool =
   ## setFullscreen according to `fullscree` and return `fullscree`

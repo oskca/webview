@@ -11,15 +11,15 @@ skipDirs      = @["tests"]
 requires "nim >= 0.17.2"
 
 task test, "a simple test case":
-    exec "nim c -r tests/bindEx.nim"
+    exec "testament pattern \"tests/*.nim\""
 
 task docs, "generate doc":
     exec "nim doc2 -o:docs/webview.html webview.nim"
 
 task sync, "update webview.h":
-    exec "wget -O webview/webview.h https://raw.githubusercontent.com/zserge/webview/master/webview.h"
-    exec "wget -O webview/webview.go https://raw.githubusercontent.com/zserge/webview/master/webview.go"
-    exec "wget -O webview/README.md https://raw.githubusercontent.com/zserge/webview/master/README.md"
+    exec "wget -O webview/webview.h https://raw.githubusercontent.com/wailsapp/wails/master/lib/renderer/webview/webview.h"
+    exec "wget -O webview/webview.go https://raw.githubusercontent.com/wailsapp/wails/master/lib/renderer/webview/webview.go"
+    exec "wget -O webview/LICENSE https://raw.githubusercontent.com/wailsapp/wails/master/lib/renderer/webview/LICENSE"
 
 task clean, "clean tmp files":
     exec "rm -rf nimcache"

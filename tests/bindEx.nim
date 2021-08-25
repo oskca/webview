@@ -1,3 +1,6 @@
+discard """
+  action: "compile"
+"""
 import webview
 import strutils 
 import os

@@ -1,3 +1,5 @@
+Latest Webview version copied from https://github.com/wailsapp/wails/tree/master/lib/renderer/webview as the official Webview changed from C to C++ and also removed existing functionality - for example Dialogs, setColor or setFullscreen.
+
 # webview
 
 [![Join the chat at https://gitter.im/zserge/webview](https://badges.gitter.im/zserge/webview.svg)](https://gitter.im/zserge/webview?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
