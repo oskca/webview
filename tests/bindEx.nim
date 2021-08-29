@@ -29,10 +29,9 @@ const indexHTML = """
     </body>
 </html>
 """
-
-let fn="$1/xxx.html"%[getTempDir()]
-writeFile(fn, indexHTML)
-var w = newWebView("Simple window demo2", "file://" & fn)
+let htmlFile = getTempDir() / "xxx.html"
+writeFile(htmlFile, indexHTML)
+var w = newWebView("Simple window demo2", "file://" & htmlFile)
 var fullScreen = true
 w.bindProcs("api"):
     proc open() = echo w.dialogOpen()
@@ -50,4 +49,4 @@ w.bindProcs("api"):
 # w.setFullscreen()
 w.run()
 w.exit()
-removeFile(fn)
+removeFile(htmlFile)

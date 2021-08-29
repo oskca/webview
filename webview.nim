@@ -190,7 +190,7 @@ proc open*(title="WebView", url="", width=640, height=480, resizable=true):int {
   ## (Linux/MacOS).
   webview(title.cstring, url.cstring, width.cint, height.cint, (if resizable: 1 else: 0).cint)
 
-const
+const 
   jsTemplate = """
 if (typeof $2 === 'undefined') {
 	$2 = {};
@@ -203,18 +203,7 @@ $2.$1 = function(arg) {
   );
 };
 """
-  jsTemplateOnlyArg = """
-if (typeof $2 === 'undefined') {
-	$2 = {};
-}
-$2.$1 = function(arg) {
-	window.external.invoke(
-    JSON.stringify(
-      {scope: "$2", name: "$1", args: JSON.stringify(arg)}
-    )
-  );
-};
-"""
+  jsTemplateOnlyArg = jsTemplate
   jsTemplateNoArg = """
 if (typeof $2 === 'undefined') {
 	$2 = {};
@@ -227,6 +216,23 @@ $2.$1 = function() {
   );
 };
 """
+
+## On webkit2gtk > 2.31, "external" is not part of "window".
+## Add following workaround for gtk: 
+var jsGtkWorkaround = """
+if (window.external == undefined) {
+	window.external = {
+		invoke: function(x) {
+			window.webkit.messageHandlers.external.postMessage(x);
+		}
+	};
+}
+""" 
+
+proc applyGtkWorkaround(w: Webview) = 
+  if not jsGtkWorkaround.isEmptyOrWhitespace:
+    discard w.eval(jsGtkWorkaround)
+    jsGtkWorkaround = ""
 
 proc bindProc*[P, R](w: Webview, scope, name: string, p: (proc(param: P): R)) =
   proc hook(hookParam: string): string =
@@ -245,7 +251,9 @@ proc bindProc*[P, R](w: Webview, scope, name: string, p: (proc(param: P): R)) =
   discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]())
   eps[w][scope][name] = hook
   # TODO eval jscode
-  w.dispatch(proc() = discard w.eval(jsTemplate%[name, scope]))
+  w.dispatch(proc() = 
+    w.applyGtkWorkaround()
+    discard w.eval(jsTemplate%[name, scope]))
 
 proc bindProcNoArg*(w: Webview, scope, name: string, p: proc()) =
   ## ugly hack or macro will fail
@@ -256,7 +264,9 @@ proc bindProcNoArg*(w: Webview, scope, name: string, p: proc()) =
   discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]())
   eps[w][scope][name] = hook
   # TODO eval jscode
-  w.dispatch(proc() = discard w.eval(jsTemplateNoArg%[name, scope]))
+  w.dispatch(proc() = 
+    w.applyGtkWorkaround()
+    discard w.eval(jsTemplateNoArg%[name, scope]))
 
 proc bindProc*[P](w: Webview, scope, name: string, p: proc(arg:P)) =
   proc hook(hookParam: string): string =
@@ -273,7 +283,9 @@ proc bindProc*[P](w: Webview, scope, name: string, p: proc(arg:P)) =
   discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]()) 
   eps[w][scope][name] = hook
   # TODO eval jscode
-  w.dispatch(proc() = discard w.eval(jsTemplateOnlyArg%[name, scope]))
+  w.dispatch(proc() = 
+    w.applyGtkWorkaround()
+    discard w.eval(jsTemplateOnlyArg%[name, scope]))
 
 macro bindProcs*(w: Webview, scope: string, n: untyped): untyped =
   ## bind procs like:
