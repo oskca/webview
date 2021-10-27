@@ -1,3 +1,6 @@
+discard """
+  action: "compile"
+"""
 import macros
 
 block:

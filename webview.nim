@@ -55,9 +55,13 @@ proc eval*(w: Webview; js: cstring): cint {.importc: "webview_eval", header: "we
 proc injectCss*(w: Webview; css: cstring): cint {.importc: "webview_inject_css", header: "webview.h".}
 proc setTitle*(w: Webview; title: cstring) {.importc: "webview_set_title", header: "webview.h".}
 proc setColor*(w: Webview; r,g,b,a: uint8) {.importc: "webview_set_color", header: "webview.h".}
+proc setIcon*(w: Webview; icon: cstring) {.importc: "webview_set_icon", header: "webview.h".}
 proc setFullscreen*(w: Webview; fullscreen: cint) {.importc: "webview_set_fullscreen", header: "webview.h".}
-proc dialog*(w: Webview; dlgtype: DialogType; flags: cint; title: cstring; arg: cstring; result: cstring; resultsz: csize) {.
-    importc: "webview_dialog", header: "webview.h".}
+proc setMinSize*(w: Webview; width, height: cint) {.importc: "webview_minsize", header: "webview.h".}
+proc setMaxSize*(w: Webview; width, height: cint) {.importc: "webview_maxsize", header: "webview.h".}
+proc focus*(w: Webview) {.importc: "webview_focus", header: "webview.h".}
+proc dialog*(w: Webview; dlgtype: DialogType; flags: cint; title: cstring; arg: cstring; 
+  result: cstring; resultsz: csize_t; filter: cstring) {.importc: "webview_dialog", header: "webview.h".}
 proc dispatch(w: Webview; fn: pointer; arg: pointer) {.importc: "webview_dispatch", header: "webview.h".}
 proc terminate*(w: Webview) {.importc: "webview_terminate", header: "webview.h".}
 proc exit*(w: Webview) {.importc: "webview_exit", header: "webview.h".}
@@ -132,14 +136,14 @@ proc dispatch*(w: Webview, fn: DispatchFn) =
   dispatchTable[idx] = fn
   dispatch(w, generalDispatchProc, cast[pointer](idx))
 
-proc dialog*(w :Webview, dlgType: DialogType, dlgFlag: int, title, arg: string): string =
+proc dialog*(w :Webview, dlgType: DialogType, dlgFlag: int, title, arg: string, filter: string = ""): string =
   ## dialog() opens a system dialog of the given type and title. String
   ## argument can be provided for certain dialogs, such as alert boxes. For
   ## alert boxes argument is a message inside the dialog box.
   let maxPath = 4096
   let resultPtr = cast[cstring](alloc0(maxPath))
   defer: dealloc(resultPtr)
-  w.dialog(dlgType, dlgFlag.cint, title.cstring, arg.cstring, resultPtr, maxPath.csize) 
+  w.dialog(dlgType, dlgFlag.cint, title.cstring, arg.cstring, resultPtr, maxPath.csize_t, filter.cstring) 
   return $resultPtr
 
 proc msg*(w: Webview, title, msg: string) =
@@ -158,15 +162,15 @@ proc error*(w: Webview, title, msg: string) =
   ## Show one error box
   discard w.dialog(dtAlert, dFlagError, title, msg)
 
-proc dialogOpen*(w: Webview, title="Open File", flag=dFlagFile): string =
+proc dialogOpen*(w: Webview, title="Open File", flag=dFlagFile, filter=""): string =
   ## Opens a dialog that requests filenames from the user. Returns ""
   ## if the user closed the dialog without selecting a file. 
-  return w.dialog(dtOpen, flag, title, "")
+  return w.dialog(dtOpen, flag, title, "", filter=filter)
 
-proc dialogSave*(w: Webview, title="Save File", flag=dFlagFile): string =
+proc dialogSave*(w: Webview, title="Save File", flag=dFlagFile, filter=""): string =
   ## Opens a dialog that requests a filename to save to from the user.
   ## Returns "" if the user closed the dialog without selecting a file.
-  return w.dialog(dtSave, flag, title, "")
+  return w.dialog(dtSave, flag, title, "", filter=filter)
 
 proc setFullscreen*(w: Webview, fullscree=true): bool =
   ## setFullscreen according to `fullscree` and return `fullscree`
@@ -190,7 +194,7 @@ proc open*(title="WebView", url="", width=640, height=480, resizable=true):int {
   ## (Linux/MacOS).
   webview(title.cstring, url.cstring, width.cint, height.cint, (if resizable: 1 else: 0).cint)
 
-const
+const 
   jsTemplate = """
 if (typeof $2 === 'undefined') {
 	$2 = {};
@@ -203,18 +207,7 @@ $2.$1 = function(arg) {
   );
 };
 """
-  jsTemplateOnlyArg = """
-if (typeof $2 === 'undefined') {
-	$2 = {};
-}
-$2.$1 = function(arg) {
-	window.external.invoke(
-    JSON.stringify(
-      {scope: "$2", name: "$1", args: JSON.stringify(arg)}
-    )
-  );
-};
-"""
+  jsTemplateOnlyArg = jsTemplate
   jsTemplateNoArg = """
 if (typeof $2 === 'undefined') {
 	$2 = {};
@@ -227,6 +220,23 @@ $2.$1 = function() {
   );
 };
 """
+
+## On webkit2gtk > 2.31, "external" is not part of "window".
+## Add following workaround for gtk: 
+var jsGtkWorkaround = """
+if (window.external == undefined) {
+	window.external = {
+		invoke: function(x) {
+			window.webkit.messageHandlers.external.postMessage(x);
+		}
+	};
+}
+""" 
+
+proc applyGtkWorkaround(w: Webview) = 
+  if not jsGtkWorkaround.isEmptyOrWhitespace:
+    discard w.eval(jsGtkWorkaround)
+    jsGtkWorkaround = ""
 
 proc bindProc*[P, R](w: Webview, scope, name: string, p: (proc(param: P): R)) =
   proc hook(hookParam: string): string =
@@ -245,7 +255,9 @@ proc bindProc*[P, R](w: Webview, scope, name: string, p: (proc(param: P): R)) =
   discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]())
   eps[w][scope][name] = hook
   # TODO eval jscode
-  w.dispatch(proc() = discard w.eval(jsTemplate%[name, scope]))
+  w.dispatch(proc() = 
+    w.applyGtkWorkaround()
+    discard w.eval(jsTemplate%[name, scope]))
 
 proc bindProcNoArg*(w: Webview, scope, name: string, p: proc()) =
   ## ugly hack or macro will fail
@@ -256,7 +268,9 @@ proc bindProcNoArg*(w: Webview, scope, name: string, p: proc()) =
   discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]())
   eps[w][scope][name] = hook
   # TODO eval jscode
-  w.dispatch(proc() = discard w.eval(jsTemplateNoArg%[name, scope]))
+  w.dispatch(proc() = 
+    w.applyGtkWorkaround()
+    discard w.eval(jsTemplateNoArg%[name, scope]))
 
 proc bindProc*[P](w: Webview, scope, name: string, p: proc(arg:P)) =
   proc hook(hookParam: string): string =
@@ -273,7 +287,9 @@ proc bindProc*[P](w: Webview, scope, name: string, p: proc(arg:P)) =
   discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]()) 
   eps[w][scope][name] = hook
   # TODO eval jscode
-  w.dispatch(proc() = discard w.eval(jsTemplateOnlyArg%[name, scope]))
+  w.dispatch(proc() = 
+    w.applyGtkWorkaround()
+    discard w.eval(jsTemplateOnlyArg%[name, scope]))
 
 macro bindProcs*(w: Webview, scope: string, n: untyped): untyped =
   ## bind procs like:
