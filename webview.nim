@@ -1,8 +1,14 @@
-{.passC: "-DWEBVIEW_STATIC -DWEBVIEW_IMPLEMENTATION".}
-{.passC: "-I" & currentSourcePath().substr(0, high(currentSourcePath()) - 4) .}
+import os
+
+const WEBVIEW_DIR = currentSourcePath().splitPath.head /  "webview"
+
+when defined(c):
+  {.passL: "-lstdc++ ".}
+  {.compile: "webview.cpp".}
+
+{.passC: "-Wall -Wextra -pedantic -I" & WEBVIEW_DIR .}
 when defined(linux):
-  {.passC: "-DWEBVIEW_GTK=1 " &
-          staticExec"pkg-config --cflags gtk+-3.0 webkit2gtk-4.0".}
+  {.passC: "-DWEBVIEW_GTK=1 " & staticExec"pkg-config --cflags gtk+-3.0 webkit2gtk-4.0".}
   {.passL: staticExec"pkg-config --libs gtk+-3.0 webkit2gtk-4.0".}
 elif defined(windows):
   {.passC: "-DWEBVIEW_WINAPI=1".}
@@ -11,302 +17,161 @@ elif defined(macosx):
   {.passC: "-DWEBVIEW_COCOA=1 -x objective-c".}
   {.passL: "-framework Cocoa -framework WebKit".}
 
-import tables, strutils
-import macros
-import json
+
+type
+  webview_t* = ptr object
+  webview_dispatch_fn* = proc (w: webview_t, arg: ptr Webview)
+  webview_bind_fn* = proc (seqId: cstring, req: cstring, arg: pointer)
+
+  WebviewContext = object
+    fn: pointer
+    arg: pointer
+
+
+  Webview* = object of RootObj
+    impl: webview_t
+    ptrs: seq[ptr WebviewContext]
+
+  Window* = ptr object
+
+  DispatchFn* = proc()
+  BindFn* = proc(ctx: pointer, seqId: string, req: string) {.nimcall.}
+
+
+  WEBVIEW_HINT* = enum
+    WEBVIEW_HINT_NONE
+    WEBVIEW_HINT_MIN
+    WEBVIEW_HINT_MAX
+    WEBVIEW_HINT_FIXED
+
+proc webview_create*(debug = false, window: Window = nil): webview_t {.importc, header: "webview.h".}
+proc webview_destroy*(w: webview_t) {.importc, header: "webview.h".}
+proc webview_run*(w: webview_t) {.importc, header: "webview.h".}
+proc webview_terminate*(w: webview_t) {.importc, header: "webview.h".}
+proc webview_dispatch*(w: webview_t, fn: webview_dispatch_fn, arg: pointer) {.importc, header: "webview.h".}
+proc webview_get_window*(w:webview_t): Window {.importc, header: "webview.h".}
+proc webview_set_title*(w:webview_t, title: cstring) {.importc, header: "webview.h".}
+proc webview_set_size*(w: webview_t, width, height: int, hints: WEBVIEW_HINT) {.importc, header: "webview.h".}
+proc webview_navigate*(w: webview_t, url: cstring) {.importc, header: "webview.h".}
+proc webview_set_html*(w: webview_t, html: cstring) {.importc, header: "webview.h".}
+proc webview_init*(w: webview_t, js: cstring) {.importc, header: "webview.h".}
+proc webview_eval*(w: webview_t, js: cstring) {.importc, header: "webview.h".}
+proc webview_bind*(w: webview_t, name: cstring, fn: pointer, arg: pointer) {.importc, header: "webview.h".}
+proc webview_unbind*(w: webview_t, name: cstring) {.importc, header: "webview.h".}
+proc webview_return*(w: webview_t, seqId: cstring, status: int32, result: cstring) {.importc, header: "webview.h".}
+
 
 ##
-## Hight level api and javascript bindings to easy bidirectonal 
+## Hight level api and javascript bindings to easy bidirectonal
 ## message passsing for ``nim`` and the ``webview`` .
 ##
 
-type
-  ExternalInvokeCb* = proc (w: Webview; arg: string)
-  WebviewPrivObj{.importc: "struct webview_priv", header: "webview.h", bycopy.} = object
-  WebviewObj* {.importc: "struct webview", header: "webview.h", bycopy.} = object
-    url* {.importc: "url".}: cstring
-    title* {.importc: "title".}: cstring
-    width* {.importc: "width".}: cint
-    height* {.importc: "height".}: cint
-    resizable* {.importc: "resizable".}: cint
-    debug* {.importc: "debug".}: cint
-    invokeCb {.importc: "external_invoke_cb".}: pointer
-    priv {.importc: "priv".}: WebviewPrivObj
-    userdata {.importc: "userdata".}: pointer
-  Webview* = ptr WebviewObj
 
-  DialogType* {.size: sizeof(cint).} = enum
-    dtOpen = 0, dtSave = 1, dtAlert = 2
-  
-const
-  dFlagFile* = 0
-  dFlagDir* = 1
-  dFlagInfo* = 1 shl 1
-  dFlagWarn* = 2 shl 1
-  dFlagError* = 3 shl 1
-  dFlagAlertMask* = 3 shl 1
-  
-type
-  DispatchFn* = proc()
-  
-proc init*(w: Webview): cint {.importc: "webview_init", header: "webview.h".}
-proc loop*(w: Webview; blocking: cint): cint {.importc: "webview_loop", header: "webview.h".}
-proc eval*(w: Webview; js: cstring): cint {.importc: "webview_eval", header: "webview.h".}
-proc injectCss*(w: Webview; css: cstring): cint {.importc: "webview_inject_css", header: "webview.h".}
-proc setTitle*(w: Webview; title: cstring) {.importc: "webview_set_title", header: "webview.h".}
-proc setColor*(w: Webview; r,g,b,a: uint8) {.importc: "webview_set_color", header: "webview.h".}
-proc setFullscreen*(w: Webview; fullscreen: cint) {.importc: "webview_set_fullscreen", header: "webview.h".}
-proc dialog*(w: Webview; dlgtype: DialogType; flags: cint; title: cstring; arg: cstring; result: cstring; resultsz: csize) {.
-    importc: "webview_dialog", header: "webview.h".}
-proc dispatch(w: Webview; fn: pointer; arg: pointer) {.importc: "webview_dispatch", header: "webview.h".}
-proc terminate*(w: Webview) {.importc: "webview_terminate", header: "webview.h".}
-proc exit*(w: Webview) {.importc: "webview_exit", header: "webview.h".}
-proc debug*(format: cstring) {.varargs, importc: "webview_debug", header: "webview.h".}
-proc printLog*(s: cstring) {.importc: "webview_print_log", header: "webview.h".}
-proc webview*(title: cstring; url: cstring; w: cint; h: cint; resizable: cint): cint {.importc: "webview", header: "webview.h".}
+proc newWebView*(title = "WebView", url = "", width = 640, height = 480, resizable = true, debug = false): Webview {.discardable.} =
+  ## Creates a new webview instance.
+  #result  = new(Webview)
 
-type
-  # ExternalProc[P, R] = proc(param: P, ret: var R): int
-  CallHook = proc(params: string): string # json -> proc -> json
-  MethodInfo* = object
-    scope*: string
-    name*: string
-    args*: string # json string
+  result.impl = webview_create(debug)
+  webview_set_title(result.impl, title)
+  webview_set_size(result.impl, width, height, if resizable: WEBVIEW_HINT_NONE else: WEBVIEW_HINT_FIXED)
+  webview_set_html(result.impl, "Thanks for using webview!")
 
-# for bindProc
-var eps = newTable[Webview, TableRef[string, TableRef[string, CallHook]]]()
+proc destroy*(w: WebView) =
+  # Destroys a webview and closes the native window.
 
-# easy callbacks
-var cbs = newTable[Webview, ExternalInvokeCb]()
+  for pt in w.ptrs:
+    dealloc(pt)
+  webview_destroy(w.impl)
 
-proc generalExternalInvokeCallback(w: Webview, arg: cstring) {.exportc.} =
-  var handled = false
-  if eps.hasKey(w):
-    try:
-      var mi = parseJson($arg).to(MethodInfo)
-      if hasKey(eps[w], mi.scope) and hasKey(eps[w][mi.scope], mi.name):
-        discard eps[w][mi.scope][mi.name](mi.args) # TODO handle return values using js callbacks
-        handled = true
-    except:
-      echo getCurrentExceptionMsg()
-  elif cbs.hasKey(w): 
-    cbs[w](w, $arg)
-    handled = true
-  if handled == false:
-    echo "external invode:'", arg, "' not handled"
+proc run*(w: Webview): Webview {.discardable.} =
+  ## Runs the main loop until it's terminated. After this function exits - you
+  ## must destroy the webview.
 
-proc `externalInvokeCB=`*(w: Webview, cb: ExternalInvokeCb)=
-  ## Set external invoke callback for webview
-  cbs[w] = cb
-
-proc newWebView*(title="WebView", url="", 
-                 width=640, height=480, 
-                 resizable=true, debug=false,
-                 cb:ExternalInvokeCb=nil): Webview =
-  ## ``newWebView`` creates and opens a new webview window using the given settings. 
-  ## This function will do webview ``init``
-  var w = cast[Webview](alloc0(sizeof(WebviewObj)))
-  w.title = title
-  w.url = url
-  w.width = width.cint
-  w.height = height.cint
-  w.resizable = if resizable: 1 else: 0
-  w.debug = if debug: 1 else: 0
-  w.invokeCb = generalExternalInvokeCallback
-  if cb != nil:
-    w.externalInvokeCB=cb
-  if w.init() != 0: return nil
+  webview_run(result.impl)
   return w
 
-# for dispatch
+proc terminate*(w: Webview): Webview {.discardable.} =
+  ## Stops the main loop. It is safe to call this function from another other
+  ## background thread.
 
-var dispatchTable = newTable[int, DispatchFn]()
+  webview_terminate(result.impl)
+  return w
 
-proc generalDispatchProc(w: Webview, arg: pointer) {.exportc.} =
-  let idx = cast[int](arg)
-  let fn = dispatchTable[idx]
-  fn()
+proc dispatch*(w: Webview, fn: webview_dispatch_fn): Webview {.discardable.} =
+  ## Posts a function to be executed on the main thread.
 
-proc dispatch*(w: Webview, fn: DispatchFn) =
-  let idx = dispatchTable.len()+1
-  dispatchTable[idx] = fn
-  dispatch(w, generalDispatchProc, cast[pointer](idx))
+  webview_dispatch(w.impl, fn, w.unsafeAddr)
+  return w
 
-proc dialog*(w :Webview, dlgType: DialogType, dlgFlag: int, title, arg: string): string =
-  ## dialog() opens a system dialog of the given type and title. String
-  ## argument can be provided for certain dialogs, such as alert boxes. For
-  ## alert boxes argument is a message inside the dialog box.
-  let maxPath = 4096
-  let resultPtr = cast[cstring](alloc0(maxPath))
-  defer: dealloc(resultPtr)
-  w.dialog(dlgType, dlgFlag.cint, title.cstring, arg.cstring, resultPtr, maxPath.csize) 
-  return $resultPtr
+proc getWindow*(w: Webview): Window =
+  ## Returns a native window handle pointer
 
-proc msg*(w: Webview, title, msg: string) =
-  ## Show one message box
-  discard w.dialog(dtAlert, 0, title, msg)
+  result = webview_get_window(w.impl)
 
-proc info*(w: Webview, title, msg: string) =
-  ## Show one alert box
-  discard w.dialog(dtAlert, dFlagInfo, title, msg)
+proc setTitle*(w: Webview, title: string): Webview {.discardable.} =
+  ## Updates the title of the native window. Must be called from the UI thread.
 
-proc warn*(w: Webview, title, msg: string) =
-  ## Show one warn box
-  discard w.dialog(dtAlert, dFlagWarn, title, msg)
+  webview_set_title(w.impl, title)
+  return w
 
-proc error*(w: Webview, title, msg: string) =
-  ## Show one error box
-  discard w.dialog(dtAlert, dFlagError, title, msg)
+proc setSize*(w: Webview, width, height: int, hints: WEBVIEW_HINT): Webview {.discardable.} =
+  ## Updates native window size. See WEBVIEW_HINT constants.
 
-proc dialogOpen*(w: Webview, title="Open File", flag=dFlagFile): string =
-  ## Opens a dialog that requests filenames from the user. Returns ""
-  ## if the user closed the dialog without selecting a file. 
-  return w.dialog(dtOpen, flag, title, "")
+  webview_set_size(w.impl, width, height, hints)
+  return w
 
-proc dialogSave*(w: Webview, title="Save File", flag=dFlagFile): string =
-  ## Opens a dialog that requests a filename to save to from the user.
-  ## Returns "" if the user closed the dialog without selecting a file.
-  return w.dialog(dtSave, flag, title, "")
+proc navigate*(w: Webview, url: string): Webview {.discardable.} =
+  ## Navigates webview to the given URL. URL may be a properly encoded data URI.
 
-proc setFullscreen*(w: Webview, fullscree=true): bool =
-  ## setFullscreen according to `fullscree` and return `fullscree`
-  if fullscree: setFullscreen(w, 1) else: setFullscreen(w, 0)
-  return fullscree
+  webview_navigate(w.impl, url)
+  return w
 
-proc run*(w: Webview)=
-  ## ``run`` starts the main UI loop until the user closes the webview window or
-  ## Terminate() is called.
-  while w.loop(1) == 0:
-    discard
+proc setHtml*(w: Webview, html: string): Webview {.discardable.} =
+  ## Set webview HTML directly.
 
-proc open*(title="WebView", url="", width=640, height=480, resizable=true):int {.discardable.} =
-  ## Open is a simplified API to open a single native window with a full-size webview in
-  ## it. It can be helpful if you want to communicate with the core app using XHR
-  ## or WebSockets (as opposed to using JavaScript bindings).
-  ##
-  ## Window appearance can be customized using title, width, height and resizable parameters.
-  ## URL must be provided and can user either a http or https protocol, or be a
-  ## local file:// URL. On some platforms "data:" URLs are also supported
-  ## (Linux/MacOS).
-  webview(title.cstring, url.cstring, width.cint, height.cint, (if resizable: 1 else: 0).cint)
+  webview_set_html(w.impl, html)
+  return w
 
-const
-  jsTemplate = """
-if (typeof $2 === 'undefined') {
-	$2 = {};
-}
-$2.$1 = function(arg) {
-	window.external.invoke(
-    JSON.stringify(
-      {scope: "$2", name: "$1", args: JSON.stringify(arg)}
-    )
-  );
-};
-"""
-  jsTemplateOnlyArg = """
-if (typeof $2 === 'undefined') {
-	$2 = {};
-}
-$2.$1 = function(arg) {
-	window.external.invoke(
-    JSON.stringify(
-      {scope: "$2", name: "$1", args: JSON.stringify(arg)}
-    )
-  );
-};
-"""
-  jsTemplateNoArg = """
-if (typeof $2 === 'undefined') {
-	$2 = {};
-}
-$2.$1 = function() {
-	window.external.invoke(
-    JSON.stringify(
-      {scope: "$2", name: "$1", args: ""}
-    )
-  );
-};
-"""
+proc initJs*(w: Webview, js: string): Webview {.discardable.} =
+  ## Injects JavaScript code at the initialization of the new page
 
-proc bindProc*[P, R](w: Webview, scope, name: string, p: (proc(param: P): R)) =
-  proc hook(hookParam: string): string =
-    var 
-      paramVal: P
-      retVal: R
-    try:
-      let jnode = parseJson(hookParam)
-      echo jnode
-      paramVal = jnode.to(P)
-    except:
-      return "parse args failed: " & getCurrentExceptionMsg()
-    retVal = p(paramVal)
-    return $(%*retVal) # ==> json
-  discard eps.hasKeyOrPut(w, newTable[string, TableRef[string, CallHook]]())
-  discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]())
-  eps[w][scope][name] = hook
-  # TODO eval jscode
-  w.dispatch(proc() = discard w.eval(jsTemplate%[name, scope]))
+  webview_init(w.impl, js)
+  return w
 
-proc bindProcNoArg*(w: Webview, scope, name: string, p: proc()) =
-  ## ugly hack or macro will fail
-  proc hook(hookParam: string): string =
-    p()
-    return ""
-  discard eps.hasKeyOrPut(w, newTable[string, TableRef[string, CallHook]]())
-  discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]())
-  eps[w][scope][name] = hook
-  # TODO eval jscode
-  w.dispatch(proc() = discard w.eval(jsTemplateNoArg%[name, scope]))
+proc eval*(w: Webview, js: string): Webview {.discardable.} =
+  ## Evaluates arbitrary JavaScript code
 
-proc bindProc*[P](w: Webview, scope, name: string, p: proc(arg:P)) =
-  proc hook(hookParam: string): string =
-    var 
-      paramVal: P
-    try:
-      let jnode = parseJson(hookParam)
-      paramVal = jnode.to(P)
-    except:
-      return "parse args failed: " & getCurrentExceptionMsg()
-    p(paramVal)
-    return ""
-  discard eps.hasKeyOrPut(w, newTable[string, TableRef[string, CallHook]]())
-  discard hasKeyOrPut(eps[w], scope, newTable[string, CallHook]()) 
-  eps[w][scope][name] = hook
-  # TODO eval jscode
-  w.dispatch(proc() = discard w.eval(jsTemplateOnlyArg%[name, scope]))
+  webview_eval(w.impl, js)
+  return w
 
-macro bindProcs*(w: Webview, scope: string, n: untyped): untyped =
-  ## bind procs like:
-  ##
-  ## .. code-block:: nim
-  ## 
-  ##    proc fn[T, U](arg: T): U
-  ##    proc fn[T](arg: T)
-  ##    proc fn()
-  ##
-  ## to webview ``w``, in scope ``scope``
-  ## then you can invode in js side, like this:
-  ##
-  ## .. code-block:: js
-  ## 
-  ##    scope.fn(arg)
-  ##
-  expectKind(n, nnkStmtList)
-  let body = n
-  for def in n:
-    expectKind(def, nnkProcDef)
-    let params = def.params()
-    let fname = $def[0]
-    # expectKind(params[0], nnkSym)
-    if params.len() == 1 and params[0].kind() == nnkEmpty: # no args
-      body.add(newCall("bindProcNoArg", w, scope, newLit(fname), newIdentNode(fname)))
-      continue 
-    if params.len() > 2 :
-      error("""only proc like `proc fn[T, U](arg: T): U` or 
-              `proc fn[T](arg: T)` or 
-              `proc()`
-            is allowed""", 
-            def)
-    body.add(newCall("bindProc", w, scope, newLit(fname), newIdentNode(fname)))
-  result = newBlockStmt(body)
-  echo repr result
+proc bindProc*(w: var Webview, name: string, fn: pointer, arg: pointer): Webview {.discardable.} =
+  ## Binds a Nim callback so that it will appear under the given name as a
+  ## global JavaScript function.
+
+  var ctx = cast[ptr WebviewContext](alloc0(sizeof(WebviewContext)))
+  ctx.fn = fn
+  ctx.arg = arg
+
+  w.ptrs.add(ctx)
+
+  var bindFn = proc (seqId: cstring, req: cstring, ctx: pointer) {.cdecl.} =
+    var context = cast[ptr WebviewContext](ctx)
+    cast[BindFn](context.fn)(context.arg, $seqId, $req)
+
+  webview_bind(w.impl, name.cstring, bindFn, ctx)
+  return w
+
+proc unbind*(w: Webview, name: string): Webview {.discardable.} =
+  ## Removes a Nim callback that was previously set by `bind()`
+  webview_unbind(w.impl, name)
+  return w
+
+proc retVal*(w: Webview, seqId: string, status: int32, data: string): Webview {.discardable.} =
+  ## Allows to return a value from the native binding.
+  webview_return(w.impl, seqId, status, data)
+  return w
+
+when isMainModule:
+  var w = newWebView()
+  w.run()
+  w.destroy()
