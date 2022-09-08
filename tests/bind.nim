@@ -20,7 +20,7 @@ type
     w: Webview
     count: int
 
-proc increment(ctx: pointer, seqId: string, req: string) {.nimcall.} =
+proc increment(ctx: pointer, seqId: string, req: string) =
   var context = cast[ptr Context](ctx)
   inc(context.count)
   echo "You tapped ", context.count, " time(s)"
@@ -28,10 +28,13 @@ proc increment(ctx: pointer, seqId: string, req: string) {.nimcall.} =
   context.w.retVal(seqId, 0, res)
 
 var
-  w = newWebView()
+  w = newWebView(debug = true)
   context = Context(w: w, count: 0)
 w.setTitle("Bind Example").setSize( 480, 320, WEBVIEW_HINT_NONE)
 w.bindProc("increment", increment, addr context).setHtml(html)
+
+w.bindScope("api", "test", increment, addr context).setHtml(html)
+
 w.run().destroy();
 
 

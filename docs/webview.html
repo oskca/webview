@@ -104,20 +104,17 @@ window.addEventListener('DOMContentLoaded', main);
       <li><a class="reference" href="#BindFn"
     title="BindFn = proc (ctx: pointer; seqId: string; req: string) {.nimcall.}">BindFn</a></li>
   <li><a class="reference" href="#DispatchFn"
-    title="DispatchFn = proc ()">DispatchFn</a></li>
+    title="DispatchFn = proc (ctx: pointer) {.nimcall.}">DispatchFn</a></li>
   <li><a class="reference" href="#Webview"
     title="Webview = object of RootObj
-  impl: webview_t
-  ptrs: seq[ptr WebviewContext]">Webview</a></li>
-  <li><a class="reference" href="#webview_bind_fn"
-    title="webview_bind_fn = proc (seqId: cstring; req: cstring; arg: pointer)">webview_bind_fn</a></li>
-  <li><a class="reference" href="#webview_dispatch_fn"
-    title="webview_dispatch_fn = proc (w: webview_t; arg: ptr Webview)">webview_dispatch_fn</a></li>
+  impl: webview_t            ## pointer to webview implementation
+  ptrs: seq[ptr WebviewCallback] ## save callbacks to prevent they are bieing GC'ed, will be free'd when call `destroy()`">Webview</a></li>
   <li><a class="reference" href="#WEBVIEW_HINT"
     title="WEBVIEW_HINT = enum
-  WEBVIEW_HINT_NONE, WEBVIEW_HINT_MIN, WEBVIEW_HINT_MAX, WEBVIEW_HINT_FIXED">WEBVIEW_HINT</a></li>
-  <li><a class="reference" href="#webview_t"
-    title="webview_t = ptr object">webview_t</a></li>
+  WEBVIEW_HINT_NONE,        ## Width and height are default size
+  WEBVIEW_HINT_MIN,         ## Width and height are minimum bounds
+  WEBVIEW_HINT_MAX,         ## Width and height are maximum bounds
+  WEBVIEW_HINT_FIXED         ## Window size can not be changed by a user">WEBVIEW_HINT</a></li>
   <li><a class="reference" href="#Window"
     title="Window = ptr object">Window</a></li>
 
@@ -127,8 +124,8 @@ window.addEventListener('DOMContentLoaded', main);
   <a class="reference reference-toplevel" href="#12" id="62">Procs</a>
   <ul class="simple simple-toc-section">
       <ul class="simple nested-toc-section">bindProc
-      <li><a class="reference" href="#bindProc%2CWebview%2Cstring%2Cpointer%2Cpointer"
-    title="bindProc(w: var Webview; name: string; fn: pointer; arg: pointer): Webview">bindProc(w: var Webview; name: string; fn: pointer; arg: pointer): Webview</a></li>
+      <li><a class="reference" href="#bindProc%2CWebview%2Cstring%2CBindFn%2Cpointer"
+    title="bindProc(w: var Webview; name: string; fn: BindFn; arg: pointer): Webview">bindProc(w: var Webview; name: string; fn: BindFn; arg: pointer): Webview</a></li>
 
   </ul>
   <ul class="simple nested-toc-section">destroy
@@ -137,8 +134,8 @@ window.addEventListener('DOMContentLoaded', main);
 
   </ul>
   <ul class="simple nested-toc-section">dispatch
-      <li><a class="reference" href="#dispatch%2CWebview%2Cwebview_dispatch_fn"
-    title="dispatch(w: Webview; fn: webview_dispatch_fn): Webview">dispatch(w: Webview; fn: webview_dispatch_fn): Webview</a></li>
+      <li><a class="reference" href="#dispatch%2CWebview%2CDispatchFn%2Cpointer"
+    title="dispatch(w: Webview; fn: DispatchFn; arg: pointer): Webview">dispatch(w: Webview; fn: DispatchFn; arg: pointer): Webview</a></li>
 
   </ul>
   <ul class="simple nested-toc-section">eval
@@ -203,81 +200,6 @@ window.addEventListener('DOMContentLoaded', main);
     title="unbind(w: Webview; name: string): Webview">unbind(w: Webview; name: string): Webview</a></li>
 
   </ul>
-  <ul class="simple nested-toc-section">webview_bind
-      <li><a class="reference" href="#webview_bind%2Cwebview_t%2Ccstring%2Cpointer%2Cpointer"
-    title="webview_bind(w: webview_t; name: cstring; fn: pointer; arg: pointer)">webview_bind(w: webview_t; name: cstring; fn: pointer; arg: pointer)</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_create
-      <li><a class="reference" href="#webview_create%2CWindow"
-    title="webview_create(debug = false; window: Window = nil): webview_t">webview_create(debug = false; window: Window = nil): webview_t</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_destroy
-      <li><a class="reference" href="#webview_destroy%2Cwebview_t"
-    title="webview_destroy(w: webview_t)">webview_destroy(w: webview_t)</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_dispatch
-      <li><a class="reference" href="#webview_dispatch%2Cwebview_t%2Cwebview_dispatch_fn%2Cpointer"
-    title="webview_dispatch(w: webview_t; fn: webview_dispatch_fn; arg: pointer)">webview_dispatch(w: webview_t; fn: webview_dispatch_fn; arg: pointer)</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_eval
-      <li><a class="reference" href="#webview_eval%2Cwebview_t%2Ccstring"
-    title="webview_eval(w: webview_t; js: cstring)">webview_eval(w: webview_t; js: cstring)</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_get_window
-      <li><a class="reference" href="#webview_get_window%2Cwebview_t"
-    title="webview_get_window(w: webview_t): Window">webview_get_window(w: webview_t): Window</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_init
-      <li><a class="reference" href="#webview_init%2Cwebview_t%2Ccstring"
-    title="webview_init(w: webview_t; js: cstring)">webview_init(w: webview_t; js: cstring)</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_navigate
-      <li><a class="reference" href="#webview_navigate%2Cwebview_t%2Ccstring"
-    title="webview_navigate(w: webview_t; url: cstring)">webview_navigate(w: webview_t; url: cstring)</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_return
-      <li><a class="reference" href="#webview_return%2Cwebview_t%2Ccstring%2Cint32%2Ccstring"
-    title="webview_return(w: webview_t; seqId: cstring; status: int32; result: cstring)">webview_return(w: webview_t; seqId: cstring; status: int32; result: cstring)</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_run
-      <li><a class="reference" href="#webview_run%2Cwebview_t"
-    title="webview_run(w: webview_t)">webview_run(w: webview_t)</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_set_html
-      <li><a class="reference" href="#webview_set_html%2Cwebview_t%2Ccstring"
-    title="webview_set_html(w: webview_t; html: cstring)">webview_set_html(w: webview_t; html: cstring)</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_set_size
-      <li><a class="reference" href="#webview_set_size%2Cwebview_t%2Cint%2Cint%2CWEBVIEW_HINT"
-    title="webview_set_size(w: webview_t; width, height: int; hints: WEBVIEW_HINT)">webview_set_size(w: webview_t; width, height: int; hints: WEBVIEW_HINT)</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_set_title
-      <li><a class="reference" href="#webview_set_title%2Cwebview_t%2Ccstring"
-    title="webview_set_title(w: webview_t; title: cstring)">webview_set_title(w: webview_t; title: cstring)</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_terminate
-      <li><a class="reference" href="#webview_terminate%2Cwebview_t"
-    title="webview_terminate(w: webview_t)">webview_terminate(w: webview_t)</a></li>
-
-  </ul>
-  <ul class="simple nested-toc-section">webview_unbind
-      <li><a class="reference" href="#webview_unbind%2Cwebview_t%2Ccstring"
-    title="webview_unbind(w: webview_t; name: cstring)">webview_unbind(w: webview_t; name: cstring)</a></li>
-
-  </ul>
 
   </ul>
 </li>
@@ -297,12 +219,12 @@ window.addEventListener('DOMContentLoaded', main);
 <dt><pre><a href="webview.html#BindFn"><span class="Identifier">BindFn</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">ctx</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">;</span> <span class="Identifier">seqId</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">req</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">)</span> {.<span class="Identifier">nimcall</span>.}</pre></dt>
 <dd>
 
-
+Nim callback for JavaScript function
 
 </dd>
 </div>
 <div id="DispatchFn">
-<dt><pre><a href="webview.html#DispatchFn"><span class="Identifier">DispatchFn</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Other">)</span></pre></dt>
+<dt><pre><a href="webview.html#DispatchFn"><span class="Identifier">DispatchFn</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">ctx</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">)</span> {.<span class="Identifier">nimcall</span>.}</pre></dt>
 <dd>
 
 
@@ -311,42 +233,21 @@ window.addEventListener('DOMContentLoaded', main);
 </div>
 <div id="Webview">
 <dt><pre><a href="webview.html#Webview"><span class="Identifier">Webview</span></a> <span class="Other">=</span> <span class="Keyword">object</span> <span class="Keyword">of</span> <span class="Identifier">RootObj</span>
-  <span class="Identifier">impl</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a>
-  <span class="Identifier">ptrs</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Keyword">ptr</span> <span class="Identifier">WebviewContext</span><span class="Other">]</span>
-</pre></dt>
+  <span class="Identifier">impl</span><span class="Other">:</span> <span class="Identifier">webview_t</span>            <span class="Comment">## pointer to webview implementation</span>
+  <span class="Identifier">ptrs</span><span class="Other">:</span> <span class="Identifier">seq</span><span class="Other">[</span><span class="Keyword">ptr</span> <span class="Identifier">WebviewCallback</span><span class="Other">]</span> <span class="Comment">## save callbacks to prevent they are bieing GC'ed, will be free'd when call `destroy()`</span>
+  </pre></dt>
 <dd>
 
-
-
-</dd>
-</div>
-<div id="webview_bind_fn">
-<dt><pre><a href="webview.html#webview_bind_fn"><span class="Identifier">webview_bind_fn</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">seqId</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">;</span> <span class="Identifier">req</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">)</span></pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_dispatch_fn">
-<dt><pre><a href="webview.html#webview_dispatch_fn"><span class="Identifier">webview_dispatch_fn</span></a> <span class="Other">=</span> <span class="Keyword">proc</span> <span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Keyword">ptr</span> <a href="webview.html#Webview"><span class="Identifier">Webview</span></a><span class="Other">)</span></pre></dt>
-<dd>
-
-
+High level Webview object wrapper
 
 </dd>
 </div>
 <div id="WEBVIEW_HINT">
 <dt><pre><a href="webview.html#WEBVIEW_HINT"><span class="Identifier">WEBVIEW_HINT</span></a> <span class="Other">=</span> <span class="Keyword">enum</span>
-  <span class="Identifier">WEBVIEW_HINT_NONE</span><span class="Other">,</span> <span class="Identifier">WEBVIEW_HINT_MIN</span><span class="Other">,</span> <span class="Identifier">WEBVIEW_HINT_MAX</span><span class="Other">,</span> <span class="Identifier">WEBVIEW_HINT_FIXED</span></pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_t">
-<dt><pre><a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a> <span class="Other">=</span> <span class="Keyword">ptr</span> <span class="Keyword">object</span></pre></dt>
+  <span class="Identifier">WEBVIEW_HINT_NONE</span><span class="Other">,</span>        <span class="Comment">## Width and height are default size</span>
+  <span class="Identifier">WEBVIEW_HINT_MIN</span><span class="Other">,</span>         <span class="Comment">## Width and height are minimum bounds</span>
+  <span class="Identifier">WEBVIEW_HINT_MAX</span><span class="Other">,</span>         <span class="Comment">## Width and height are maximum bounds</span>
+  <span class="Identifier">WEBVIEW_HINT_FIXED</span>         <span class="Comment">## Window size can not be changed by a user</span></pre></dt>
 <dd>
 
 
@@ -354,10 +255,11 @@ window.addEventListener('DOMContentLoaded', main);
 </dd>
 </div>
 <div id="Window">
-<dt><pre><a href="webview.html#Window"><span class="Identifier">Window</span></a> <span class="Other">=</span> <span class="Keyword">ptr</span> <span class="Keyword">object</span></pre></dt>
+<dt><pre><a href="webview.html#Window"><span class="Identifier">Window</span></a> <span class="Other">=</span> <span class="Keyword">ptr</span> <span class="Keyword">object</span>
+  </pre></dt>
 <dd>
 
-
+Pointer to native window handler
 
 </dd>
 </div>
@@ -366,8 +268,8 @@ window.addEventListener('DOMContentLoaded', main);
 <div class="section" id="12">
 <h1><a class="toc-backref" href="#12">Procs</a></h1>
 <dl class="item">
-<div id="bindProc,Webview,string,pointer,pointer">
-<dt><pre><span class="Keyword">proc</span> <a href="#bindProc%2CWebview%2Cstring%2Cpointer%2Cpointer"><span class="Identifier">bindProc</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="webview.html#Webview"><span class="Identifier">Webview</span></a><span class="Other">;</span> <span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">fn</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">)</span><span class="Other">:</span> <a href="webview.html#Webview"><span class="Identifier">Webview</span></a> {.
+<div id="bindProc,Webview,string,BindFn,pointer">
+<dt><pre><span class="Keyword">proc</span> <a href="#bindProc%2CWebview%2Cstring%2CBindFn%2Cpointer"><span class="Identifier">bindProc</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <span class="Keyword">var</span> <a href="webview.html#Webview"><span class="Identifier">Webview</span></a><span class="Other">;</span> <span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">string</span><span class="Other">;</span> <span class="Identifier">fn</span><span class="Other">:</span> <a href="webview.html#BindFn"><span class="Identifier">BindFn</span></a><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">)</span><span class="Other">:</span> <a href="webview.html#Webview"><span class="Identifier">Webview</span></a> {.
     <span class="Identifier">discardable</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
 <dd>
 
@@ -379,16 +281,16 @@ Binds a Nim callback so that it will appear under the given name as a global Jav
 <dt><pre><span class="Keyword">proc</span> <a href="#destroy%2CWebview"><span class="Identifier">destroy</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#Webview"><span class="Identifier">Webview</span></a><span class="Other">)</span> {.<span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
 <dd>
 
-
+Destroys a webview and closes the native window.
 
 </dd>
 </div>
-<div id="dispatch,Webview,webview_dispatch_fn">
-<dt><pre><span class="Keyword">proc</span> <a href="#dispatch%2CWebview%2Cwebview_dispatch_fn"><span class="Identifier">dispatch</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#Webview"><span class="Identifier">Webview</span></a><span class="Other">;</span> <span class="Identifier">fn</span><span class="Other">:</span> <a href="webview.html#webview_dispatch_fn"><span class="Identifier">webview_dispatch_fn</span></a><span class="Other">)</span><span class="Other">:</span> <a href="webview.html#Webview"><span class="Identifier">Webview</span></a> {.<span class="Identifier">discardable</span><span class="Other">,</span>
+<div id="dispatch,Webview,DispatchFn,pointer">
+<dt><pre><span class="Keyword">proc</span> <a href="#dispatch%2CWebview%2CDispatchFn%2Cpointer"><span class="Identifier">dispatch</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#Webview"><span class="Identifier">Webview</span></a><span class="Other">;</span> <span class="Identifier">fn</span><span class="Other">:</span> <a href="webview.html#DispatchFn"><span class="Identifier">DispatchFn</span></a><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">)</span><span class="Other">:</span> <a href="webview.html#Webview"><span class="Identifier">Webview</span></a> {.<span class="Identifier">discardable</span><span class="Other">,</span>
     <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
 <dd>
 
-Posts a function to be executed on the main thread.
+Posts a function to be executed on the main thread.. You normally do not need to call this function, unless you want to tweak the native window.
 
 </dd>
 </div>
@@ -496,141 +398,6 @@ Removes a Nim callback that was previously set by <tt class="docutils literal"><
 
 </dd>
 </div>
-<div id="webview_bind,webview_t,cstring,pointer,pointer">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_bind%2Cwebview_t%2Ccstring%2Cpointer%2Cpointer"><span class="Identifier">webview_bind</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">;</span> <span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">;</span> <span class="Identifier">fn</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">)</span> {.
-    <span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_create,Window">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_create%2CWindow"><span class="Identifier">webview_create</span></a><span class="Other">(</span><span class="Identifier">debug</span> <span class="Other">=</span> <span class="Identifier">false</span><span class="Other">;</span> <span class="Identifier">window</span><span class="Other">:</span> <a href="webview.html#Window"><span class="Identifier">Window</span></a> <span class="Other">=</span> <span class="Keyword">nil</span><span class="Other">)</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a> {.<span class="Identifier">importc</span><span class="Other">,</span>
-    <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_destroy,webview_t">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_destroy%2Cwebview_t"><span class="Identifier">webview_destroy</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">)</span> {.<span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
-                                     <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_dispatch,webview_t,webview_dispatch_fn,pointer">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_dispatch%2Cwebview_t%2Cwebview_dispatch_fn%2Cpointer"><span class="Identifier">webview_dispatch</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">;</span> <span class="Identifier">fn</span><span class="Other">:</span> <a href="webview.html#webview_dispatch_fn"><span class="Identifier">webview_dispatch_fn</span></a><span class="Other">;</span> <span class="Identifier">arg</span><span class="Other">:</span> <span class="Identifier">pointer</span><span class="Other">)</span> {.
-    <span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_eval,webview_t,cstring">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_eval%2Cwebview_t%2Ccstring"><span class="Identifier">webview_eval</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">;</span> <span class="Identifier">js</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span> {.<span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span>
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_get_window,webview_t">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_get_window%2Cwebview_t"><span class="Identifier">webview_get_window</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">)</span><span class="Other">:</span> <a href="webview.html#Window"><span class="Identifier">Window</span></a> {.<span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span>
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_init,webview_t,cstring">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_init%2Cwebview_t%2Ccstring"><span class="Identifier">webview_init</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">;</span> <span class="Identifier">js</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span> {.<span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span>
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_navigate,webview_t,cstring">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_navigate%2Cwebview_t%2Ccstring"><span class="Identifier">webview_navigate</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">;</span> <span class="Identifier">url</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span> {.<span class="Identifier">importc</span><span class="Other">,</span>
-    <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_return,webview_t,cstring,int32,cstring">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_return%2Cwebview_t%2Ccstring%2Cint32%2Ccstring"><span class="Identifier">webview_return</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">;</span> <span class="Identifier">seqId</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">;</span> <span class="Identifier">status</span><span class="Other">:</span> <span class="Identifier">int32</span><span class="Other">;</span> <span class="Identifier">result</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span> {.
-    <span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_run,webview_t">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_run%2Cwebview_t"><span class="Identifier">webview_run</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">)</span> {.<span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
-                                 <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_set_html,webview_t,cstring">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_set_html%2Cwebview_t%2Ccstring"><span class="Identifier">webview_set_html</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">;</span> <span class="Identifier">html</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span> {.<span class="Identifier">importc</span><span class="Other">,</span>
-    <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_set_size,webview_t,int,int,WEBVIEW_HINT">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_set_size%2Cwebview_t%2Cint%2Cint%2CWEBVIEW_HINT"><span class="Identifier">webview_set_size</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">;</span> <span class="Identifier">width</span><span class="Other">,</span> <span class="Identifier">height</span><span class="Other">:</span> <span class="Identifier">int</span><span class="Other">;</span> <span class="Identifier">hints</span><span class="Other">:</span> <a href="webview.html#WEBVIEW_HINT"><span class="Identifier">WEBVIEW_HINT</span></a><span class="Other">)</span> {.
-    <span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_set_title,webview_t,cstring">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_set_title%2Cwebview_t%2Ccstring"><span class="Identifier">webview_set_title</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">;</span> <span class="Identifier">title</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span> {.<span class="Identifier">importc</span><span class="Other">,</span>
-    <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_terminate,webview_t">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_terminate%2Cwebview_t"><span class="Identifier">webview_terminate</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">)</span> {.<span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span> <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span>
-                                       <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
-<div id="webview_unbind,webview_t,cstring">
-<dt><pre><span class="Keyword">proc</span> <a href="#webview_unbind%2Cwebview_t%2Ccstring"><span class="Identifier">webview_unbind</span></a><span class="Other">(</span><span class="Identifier">w</span><span class="Other">:</span> <a href="webview.html#webview_t"><span class="Identifier">webview_t</span></a><span class="Other">;</span> <span class="Identifier">name</span><span class="Other">:</span> <span class="Identifier">cstring</span><span class="Other">)</span> {.<span class="Identifier">importc</span><span class="Other">,</span> <span class="Identifier">header</span><span class="Other">:</span> <span class="StringLit">&quot;webview.h&quot;</span><span class="Other">,</span>
-    <span><span class="Other pragmadots">...</span></span><span class="pragmawrap"><span class="Identifier">raises</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span><span class="Other">,</span> <span class="Identifier">tags</span><span class="Other">:</span> <span class="Other">[</span><span class="Other">]</span></span>.}</pre></dt>
-<dd>
-
-
-
-</dd>
-</div>
 
 </dl></div>
 
@@ -641,7 +408,7 @@ Removes a Nim callback that was previously set by <tt class="docutils literal"><
       <div class="twelve-columns footer">
         <span class="nim-sprite"></span>
         <br/>
-        <small style="color: var(--hint);">Made with Nim. Generated: 2022-09-07 20:01:34 UTC</small>
+        <small style="color: var(--hint);">Made with Nim. Generated: 2022-09-08 02:37:49 UTC</small>
       </div>
     </div>
   </div>
